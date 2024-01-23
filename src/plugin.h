@@ -19,6 +19,7 @@ struct _GstPluginProjectM {
   GstAudioVisualizer element;
   GstPad *sinkpad, *srcpad;
   gboolean silent;
+  
   gchar *preset;
 };
 
@@ -37,6 +38,8 @@ static void gst_plugin_projectm_init(GstPluginProjectM *plugin);
 static void gst_plugin_projectm_finalize(GObject *object);
 
 static void gst_plugin_projectm_class_init(GstPluginProjectMClass *klass);
+
+static gboolean plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 

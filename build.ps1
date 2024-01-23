@@ -4,8 +4,8 @@ if (!$Env:PROJECTM4_DIR) {
     exit 1
 }
 
-if (!$Env:VCPKG_INSTALLATION_ROOT) {
-    Write-Host "VCPKG_INSTALLATION_ROOT environment variable not set"
+if (!$Env:VCPKG) {
+    Write-Host "VCPKG environment variable not set"
     exit 1
 }
 
@@ -37,7 +37,7 @@ cmake `
     -A "X64" `
     -S "$ROOT" `
     -B "$BUILD" `
-    -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" `
+    -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG}/scripts/buildsystems/vcpkg.cmake" `
     -DVCPKG_TARGET_TRIPLET=x64-windows `
     -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" `
     -DCMAKE_VERBOSE_MAKEFILE=YES `
