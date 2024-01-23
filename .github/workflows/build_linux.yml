@@ -30,6 +30,13 @@ jobs:
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON
 
+      - name: Cache Build
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ github.workspace }}/cmake-build/CMakeFiles
+          key: cmake-${{ runner.os }}-${{ hashFiles('**/CMakeCache.txt') }}
+
       - name: Build Release
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
 
