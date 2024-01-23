@@ -21,15 +21,22 @@ $ROOT = Get-Location
 $BUILD = "$ROOT\build"
 $DIST = "$ROOT\dist"
 
-# Print directories
-Write-Host "Current directory: $ROOT"
-Write-Host "ProjectM directory: $Env:PROJECTM_DIR"
-
 # Clean up previous build files
-Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
-Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$DIST"
-New-Item -Path "$BUILD" -ItemType Directory | Out-Null
-New-Item -Path "$DIST" -ItemType Directory | Out-Null
+if ($AUTO -eq "false") {
+    # Ask to clean
+    Write-Host
+    Write-Host "Clean previous build? [Y/n]"
+    $CLEAN_ANSWER = Read-Host
+} else {
+    $CLEAN_ANSWER = "Y"
+}
+
+if ($CLEAN_ANSWER -ne "N" -and $CLEAN_ANSWER -ne "n") {
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
+    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$DIST"
+    New-Item -Path "$BUILD" -ItemType Directory | Out-Null
+    New-Item -Path "$DIST" -ItemType Directory | Out-Null
+}
 
 # Configure build
 cmake `
@@ -50,15 +57,16 @@ if (Test-Path "$BUILD\Release\gstprojectm.dll") {
     # Move to dist
     Copy-Item -Path "$BUILD\Release\gstprojectm.dll" -Destination "$DIST\gstprojectm.dll" -Force
 
-    if ($AUTO -eq "true") {
-        exit 0
+    if ($AUTO -eq "false") {
+        # Ask to install
+        Write-Host
+        Write-Host "Install to gstreamer plugins? [Y/n]"
+        $INSTALL_ANSWER = Read-Host
+    } else {
+        $INSTALL_ANSWER = "Y"
     }
 
-    # Ask to install
-    Write-Host "Install to gstreamer plugins? [Y/n]"
-    $answer = Read-Host
-
-    if ($answer -ne "N" -and $answer -ne "n") {
+    if ($INSTALL_ANSWER -ne "N" -and $INSTALL_ANSWER -ne "n") {
         # Use environment variable if set, otherwise use default
         if ($Env:GST_PLUGIN_PATH) {
             $GST_PLUGINS_DIR = $Env:GST_PLUGIN_PATH
@@ -70,7 +78,7 @@ if (Test-Path "$BUILD\Release\gstprojectm.dll") {
         }
 
         # Create the destination directory if it doesn't exist
-        New-Item -Path "$GST_PLUGINS_DIR" -ItemType Directory | Out-Null
+        New-Item -Path "$GST_PLUGINS_DIR" -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
 
         # Move the file to the destination, overwriting if it exists
         Copy-Item -Path "$DIST\gstprojectm.dll" -Destination "$GST_PLUGINS_DIR\gstprojectm.dll" -Force
