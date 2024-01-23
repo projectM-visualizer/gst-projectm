@@ -109,6 +109,9 @@ static gboolean plugin_init(GstPlugin *plugin) {
 #ifndef PACKAGE
 #define PACKAGE "GstProjectM"
 #endif
+#ifndef PACKAGE_NAME
+#define PACKAGE_NAME "GstProjectM"
+#endif
 #ifndef PACKAGE_VERSION
 #define PACKAGE_VERSION "0.0.1"
 #endif
@@ -116,9 +119,9 @@ static gboolean plugin_init(GstPlugin *plugin) {
 #define PACKAGE_LICENSE "LGPL"
 #endif
 #ifndef PACKAGE_ORIGIN
-#define PACKAGE_ORIGIN "http://FIXME.org/"
+#define PACKAGE_ORIGIN "https://github.com/anomievision/gst-plugin-projectm"
 #endif
 
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR, projectm,
                   "plugin to visualize audio using the ProjectM library", plugin_init,
-                  PACKAGE_VERSION, PACKAGE_LICENSE, PACKAGE, PACKAGE_ORIGIN)
+                  PACKAGE_VERSION, PACKAGE_LICENSE, PACKAGE_NAME, PACKAGE_ORIGIN)

@@ -30,6 +30,8 @@ git clone https://github.com/anomievision/gst-plugin-projectm.git
 
 ```powershell
 .\build.ps1
+
+.\build.ps1 --auto # Skips prompts by using default options
 ```
 
 ### Installing
