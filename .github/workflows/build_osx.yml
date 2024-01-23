@@ -55,8 +55,9 @@ jobs:
       - name: Wait for ProjectM
         uses: yogeshlonkar/wait-for-jobs@v0
         with:
-          interval: '10000'
+          interval: '15000'
           jobs: Build ProjectM
+          ttl: '15'
 
       - name: Download Artifact
         uses: actions/download-artifact@v4
