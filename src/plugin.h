@@ -30,6 +30,7 @@ struct _GstPluginProjectMClass {
 static void gst_plugin_projectm_set_property(GObject *object, guint prop_id,
                                              const GValue *value,
                                              GParamSpec *pspec);
+                                             
 static void gst_plugin_projectm_get_property(GObject *object, guint prop_id,
                                              GValue *value, GParamSpec *pspec);
 

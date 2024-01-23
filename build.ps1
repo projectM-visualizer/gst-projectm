@@ -1,5 +1,5 @@
 # Check if environment variables are set
-if (!$Env:PROJECTM4_DIR) {
+if (!$Env:PROJECTM_DIR) {
     Write-Host "PROJECTM4_DIR environment variable not set"
     exit 1
 }
@@ -23,7 +23,7 @@ $DIST = "$ROOT\dist"
 
 # Print directories
 Write-Host "Current directory: $ROOT"
-Write-Host "ProjectM directory: $Env:PROJECTM4_DIR"
+Write-Host "ProjectM directory: $Env:PROJECTM_DIR"
 
 # Clean up previous build files
 Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
@@ -41,7 +41,7 @@ cmake `
     -DVCPKG_TARGET_TRIPLET=x64-windows `
     -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" `
     -DCMAKE_VERBOSE_MAKEFILE=YES `
-    -DCMAKE_PREFIX_PATH="${Env:PROJECTM4_DIR}"
+    -DCMAKE_PREFIX_PATH="${Env:PROJECTM_DIR}/lib/cmake/projectM4"
 
 # Build
 cmake --build "$BUILD" --config "Release" --parallel

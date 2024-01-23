@@ -1,11 +1,18 @@
+/*
+ * GStreamer
+ * Copyright (C) 2024 AnomieVision <>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include <glib-object.h>
 #include <gst/gst.h>
 
 #include "plugin.h"
+#include "caps.h"
+#include "enums.h"
+#include "projectm.h"
 
 GST_DEBUG_CATEGORY(gst_plugin_projectm_debug);
 #define GST_CAT_DEFAULT gst_plugin_projectm_debug
@@ -14,17 +21,6 @@ G_DEFINE_TYPE_WITH_CODE(GstPluginProjectM, gst_plugin_projectm, GST_TYPE_AUDIO_V
                         GST_DEBUG_CATEGORY_INIT(gst_plugin_projectm_debug,
                                                 "projectM", 0,
                                                 "projectM visualizer plugin with code"));
-
-enum
-{
-  LAST_SIGNAL
-};
-
-enum { 
-    PROP_0, 
-    PROP_CONTEXT, 
-    PROP_LOCATION 
-};
 
 static void gst_plugin_projectm_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec) {
   GstPluginProjectM *plugin = GST_PLUGIN_PROJECTM(object);
@@ -61,7 +57,7 @@ static void gst_plugin_projectm_finalize(GObject *object) {
 }
 
 static void gst_plugin_projectm_init(GstPluginProjectM *plugin) {
-//   gst_plugin_projectm_class_init(gst_plugin_projectm_parent_class);
+  // Empty to avoid compiler warnings
 }
 
 static void gst_plugin_projectm_class_init(GstPluginProjectMClass *klass) {
@@ -71,7 +67,7 @@ static void gst_plugin_projectm_class_init(GstPluginProjectMClass *klass) {
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-//   gst_caps_init(klass);
+  gst_caps_init(klass);
   
   gobject_class->set_property = gst_plugin_projectm_set_property;
   gobject_class->get_property = gst_plugin_projectm_get_property;
@@ -98,6 +94,12 @@ static void gst_plugin_projectm_class_init(GstPluginProjectMClass *klass) {
 static gboolean plugin_init(GstPlugin *plugin) {
   GST_DEBUG_CATEGORY_INIT(gst_plugin_projectm_debug, "projectm", 0,
                           "projectm audio visualisations");
+
+  gst_plugin_projectm_class_init;
+
+  // GTypeInfo info = {sizeof(GstPluginProjectMClass), NULL, NULL,
+  //                   gst_plugin_projectm_class_init,  NULL, NULL,
+  //                   sizeof(GstPluginProjectM),      0,    NULL};
 
   gst_element_register(plugin, "projectm", GST_RANK_NONE, GST_TYPE_PLUGIN_PROJECTM);
 

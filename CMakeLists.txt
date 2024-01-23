@@ -16,6 +16,11 @@ find_package(GLIB2 REQUIRED)
 add_library(gstprojectm SHARED
     src/plugin.h
     src/plugin.c
+    src/caps.h
+    src/caps.c
+    src/enums.h
+    src/projectm.h
+    src/projectm.c 
 )
 
 target_include_directories(gstprojectm
@@ -48,4 +53,5 @@ target_link_libraries(gstprojectm
         ${GSTREAMER_PBUTILS_LIBRARIES}
         ${GSTREAMER_AUDIO_LIBRARIES}
         ${GLIB2_LIBRARIES}
+        "E:/Github/gst-plugins-workspace/gst-plugin-playground/build/vcpkg_installed/x64-windows/debug/lib/gobject-2.0.lib"
 )
