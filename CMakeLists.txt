@@ -53,5 +53,5 @@ target_link_libraries(gstprojectm
         ${GSTREAMER_PBUTILS_LIBRARIES}
         ${GSTREAMER_AUDIO_LIBRARIES}
         ${GLIB2_LIBRARIES}
-        "E:/Github/gst-plugins-workspace/gst-plugin-playground/build/vcpkg_installed/x64-windows/debug/lib/gobject-2.0.lib"
+        ${GLIB2_GOBJECT_LIBRARIES}
 )

@@ -10,15 +10,14 @@
 # Redistribution and use is allowed according to the terms of the BSD license.
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
-
 if(GLIB2_INCLUDE_DIR AND GLIB2_LIBRARIES)
     # Already in cache, be silent
     set(GLIB2_FIND_QUIETLY TRUE)
 endif(GLIB2_INCLUDE_DIR AND GLIB2_LIBRARIES)
 
 if (NOT WIN32)
-   find_package(PkgConfig REQUIRED QUIET)
-   pkg_check_modules(PKG_GLIB REQUIRED QUIET glib-2.0)
+    find_package(PkgConfig REQUIRED QUIET)
+    pkg_check_modules(PKG_GLIB REQUIRED QUIET glib-2.0)
 endif(NOT WIN32)
 
 find_path(GLIB2_MAIN_INCLUDE_DIR glib.h
@@ -28,6 +27,11 @@ find_path(GLIB2_MAIN_INCLUDE_DIR glib.h
 # search the glibconfig.h include dir under the same root where the library is found
 find_library(GLIB2_LIBRARIES
              NAMES glib-2.0
+             HINTS ${PKG_GLIB_LIBRARY_DIRS} ${PKG_GLIB_LIBDIR})
+
+# Additional library: gobject-2.0
+find_library(GLIB2_GOBJECT_LIBRARIES
+             NAMES gobject-2.0
              HINTS ${PKG_GLIB_LIBRARY_DIRS} ${PKG_GLIB_LIBDIR})
 
 find_path(GLIB2_INTERNAL_INCLUDE_DIR glibconfig.h
@@ -43,10 +47,9 @@ if(GLIB2_INTERNAL_INCLUDE_DIR)
 endif(GLIB2_INTERNAL_INCLUDE_DIR)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(GLIB2  DEFAULT_MSG  GLIB2_LIBRARIES GLIB2_MAIN_INCLUDE_DIR)
+find_package_handle_standard_args(GLIB2  DEFAULT_MSG  GLIB2_LIBRARIES GLIB2_MAIN_INCLUDE_DIR GLIB2_GOBJECT_LIBRARIES)
 
-mark_as_advanced(GLIB2_INCLUDE_DIR GLIB2_LIBRARIES)
-
+mark_as_advanced(GLIB2_INCLUDE_DIR GLIB2_LIBRARIES GLIB2_GOBJECT_LIBRARIES)
 
 find_program(GLIB2_GENMARSHAL_UTIL glib-genmarshal)
 
