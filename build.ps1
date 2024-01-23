@@ -46,39 +46,47 @@ cmake `
 # Build
 cmake --build "$BUILD" --config "Release" --parallel
 
-# Move to dist
-Copy-Item -Path "$BUILD\Release\gstprojectm.dll" -Destination "$DIST\gstprojectm.dll" -Force
+if (Test-Path "$BUILD\Release\gstprojectm.dll") {
+    # Move to dist
+    Copy-Item -Path "$BUILD\Release\gstprojectm.dll" -Destination "$DIST\gstprojectm.dll" -Force
 
-if ($AUTO -eq "true") {
-    exit 0
-}
-
-# Ask to install
-Write-Host "Install to gstreamer plugins? [Y/n]"
-$answer = Read-Host
-
-if ($answer -ne "N" -and $answer -ne "n") {
-    # Use environment variable if set, otherwise use default
-    if ($Env:GST_PLUGIN_PATH) {
-        $GST_PLUGINS_DIR = $Env:GST_PLUGIN_PATH
-    } else {
-        $GST_PLUGINS_DIR = "$Env:USERPROFILE\.gstreamer\1.0\plugins"
-        # Set environment variable
-        [Environment]::SetEnvironmentVariable("GST_PLUGIN_PATH", $GST_PLUGINS_DIR, "User")
+    if ($AUTO -eq "true") {
+        exit 0
     }
 
-    # Create the destination directory if it doesn't exist
-    New-Item -Path "$GST_PLUGINS_DIR" -ItemType Directory | Out-Null
+    # Ask to install
+    Write-Host "Install to gstreamer plugins? [Y/n]"
+    $answer = Read-Host
 
-    # Move the file to the destination, overwriting if it exists
-    Copy-Item -Path "$DIST\gstprojectm.dll" -Destination "$GST_PLUGINS_DIR\gstprojectm.dll" -Force
+    if ($answer -ne "N" -and $answer -ne "n") {
+        # Use environment variable if set, otherwise use default
+        if ($Env:GST_PLUGIN_PATH) {
+            $GST_PLUGINS_DIR = $Env:GST_PLUGIN_PATH
+        }
+        else {
+            $GST_PLUGINS_DIR = "$Env:USERPROFILE\.gstreamer\1.0\plugins"
+            # Set environment variable
+            [Environment]::SetEnvironmentVariable("GST_PLUGIN_PATH", $GST_PLUGINS_DIR, "User")
+        }
 
-    # Print example command
-    Write-Host
-    Write-Host "Done! Here's an example command:"
-    Write-Host 'gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false'
-} else {
-    Write-Host
-    Write-Host "Done!"
-    Write-Host "You can install the plugin manually by moving <dist\libgstprojectm.dll> to <$GST_PLUGINS_DIR\libgstprojectm.dll>"
+        # Create the destination directory if it doesn't exist
+        New-Item -Path "$GST_PLUGINS_DIR" -ItemType Directory | Out-Null
+
+        # Move the file to the destination, overwriting if it exists
+        Copy-Item -Path "$DIST\gstprojectm.dll" -Destination "$GST_PLUGINS_DIR\gstprojectm.dll" -Force
+
+        # Print example command
+        Write-Host
+        Write-Host "Done! Here's an example command:"
+        Write-Host 'gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false'
+    }
+    else {
+        Write-Host
+        Write-Host "Done!"
+        Write-Host "You can install the plugin manually by moving <dist\libgstprojectm.dll> to <$GST_PLUGINS_DIR\libgstprojectm.dll>"
+    }
+}
+else {
+    Write-Host "Build failed"
+    exit 1
 }
