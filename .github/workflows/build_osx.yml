@@ -1,0 +1,82 @@
+name: macOS (x86_64)
+
+on:
+  push:
+      branches: 
+        - "*"
+      tags:
+        - "*"
+    
+  pull_request:
+      branches: 
+        - "*"
+
+jobs:
+  build-projectm:
+    name: Build ProjectM
+    runs-on: macos-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: 'projectM-visualizer/projectm'
+          submodules: 'recursive'
+
+      - name: Install Packages
+        run: |
+          brew update
+          brew install ninja sdl2
+
+      - name: Configure Build
+        run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON
+
+      - name: Build Release
+        run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
+
+      - name: Install
+        run: |
+          cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --target install
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+            name: projectm-osx-shared-latest
+            path: install/*
+
+  build-plugin:
+    name: Build GST ProjectM Plugin
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+
+      - name: Wait for ProjectM
+        uses: yogeshlonkar/wait-for-jobs@v0
+        with:
+          interval: '10000'
+          jobs: Build ProjectM
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: projectm-osx-shared-latest
+          path: artifacts
+
+      - name: Install Packages
+        run: |
+          brew update
+          brew install ninja gstreamer || true
+        
+      - name: Configure Build
+        run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"
+
+      - name: Build Release
+        run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+            name: gst-projectm-osx-latest
+            path: ${{ github.workspace }}/cmake-build/libgstprojectm.so
