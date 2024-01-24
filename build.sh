@@ -1,10 +1,14 @@
 #!/bin/bash
 set -e
 
-# Check if environment variables are set
-if [ -z "$PROJECTM_ROOT" ] ; then
-    echo "PROJECTM_ROOT is not set!"
-    exit 1
+# Check if environment variables are set, if needed
+if [ -d "/usr/local/include/projectM-4" ] ; then
+    export PROJECTM_ROOT="/usr/local"
+else
+    if [ -z "$PROJECTM_ROOT" ] ; then
+        echo "PROJECTM_ROOT is not set!"
+        exit 1
+    fi
 fi
 
 AUTO=false
@@ -19,46 +23,74 @@ ROOT="$(pwd)"
 BUILD="$ROOT/build"
 DIST="$ROOT/dist"
 
-# Install needed packages
-if command -v apt &>/dev/null; then
-    APT_PACKAGE_LIST=("ninja-build" "mesa-common-dev" "build-essential" "git" "cmake" "pkg-config" "libgstreamer1.0-dev" "libgstreamer-gl1.0-0" "libgstreamer-plugins-base1.0-dev")
-    
-    # Check for required packages before updating and installing
-    for PACKAGE in "${APT_PACKAGE_LIST[@]}"; do
-        if ! dpkg -s "$PACKAGE" >/dev/null 2>&1 ; then
+# Function to install packages based on the package manager
+install_packages() {
+    local package_manager=$1
+    local package_list=("${!2}")
+
+    case $package_manager in
+        apt)
             sudo apt update
-            sudo apt install "${APT_PACKAGE_LIST[@]}"
-            break
-        fi
-    done
+            sudo apt install "${package_list[@]}"
+            ;;
+        pacman)
+            sudo pacman -Syyu
+            sudo pacman -S "${package_list[@]}"
+            ;;
+        brew)
+            brew update
+            brew install "${package_list[@]}"
+            ;;
+    esac
+}
+
+# Check for available package managers
+available_package_managers=()
+
+if command -v apt &>/dev/null; then
+    available_package_managers+=("apt")
 fi
 
 if command -v pacman &>/dev/null; then
-    # PACMAN_PACKAGE_LIST="base-devel ninja cmake mesa gst-plugins-base-libs"
-    PACMAN_PACKAGE_LIST=("base-devel" "ninja" "cmake" "mesa" "gst-plugins-base-libs")
-    
-    # Check for required packages before updating and installing
-    for PACKAGE in "${PACMAN_PACKAGE_LIST[@]}"; do
-        if ! pacman -Q "$PACKAGE" >/dev/null 2>&1 ; then
-            sudo pacman -Syu
-            sudo pacman -S "${PACMAN_PACKAGE_LIST[@]}"
-            break
-        fi
-    done
+    available_package_managers+=("pacman")
 fi
 
 if command -v brew &>/dev/null; then
-    BREW_PACKAGE_LIST=("git" "ninja" "cmake" "gstreamer")
+    available_package_managers+=("brew")
+fi
 
-    # Check for required packages before updating and installing
-    for PACKAGE in "${BREW_PACKAGE_LIST[@]}"; do
-        if ! brew list | grep -q "$PACKAGE"; then
-            brew update
-            brew install "${BREW_PACKAGE_LIST[@]}"
+# Prompt user to choose a package manager
+if [ ${#available_package_managers[@]} -eq 0 ]; then
+    echo "No supported package managers found."
+    exit 1
+elif [ ${#available_package_managers[@]} -eq 1 ]; then
+    selected_package_manager=${available_package_managers[0]}
+else
+    echo -n "Multiple package managers found. Please choose one:"
+    select selected_package_manager in "${available_package_managers[@]}"; do
+        if [ -n "$selected_package_manager" ]; then
             break
+        else
+            echo "Invalid selection. Please choose a number."
         fi
     done
 fi
+
+# Install packages based on the selected package manager
+case $selected_package_manager in
+    apt)
+        package_list=("ninja-build" "mesa-common-dev" "build-essential" "git" "cmake" "pkg-config" "libgstreamer1.0-dev" "libgstreamer-gl1.0-0" "libgstreamer-plugins-base1.0-dev")
+        install_packages "$selected_package_manager" package_list[@]
+        ;;
+    pacman)
+        package_list=("base-devel" "ninja" "cmake" "mesa" "gst-plugins-base-libs")
+        install_packages "$selected_package_manager" package_list[@]
+        ;;
+    brew)
+        package_list=("git" "ninja" "cmake" "gstreamer")
+        install_packages "$selected_package_manager" package_list[@]
+        ;;
+esac
 
 # Clean up previous build files, if found
 if [ -d "$BUILD" ] || [ -d "$DIST" ]; then

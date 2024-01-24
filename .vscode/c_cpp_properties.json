@@ -26,8 +26,10 @@
                 "${workspaceFolder}/**",
                 "/usr/include",
                 "/usr/include/gstreamer-1.0",
+                "/usr/lib/gstreamer-1.0/include", // for gstglconfig.h
                 "/usr/include/glib-2.0",
-                "/usr/lib/x86_64-linux-gnu/glib-2.0/include",
+                "/usr/lib64/glib-2.0/include/", // for glibconfig.h (Linux)
+                "/usr/lib/x86_64-linux-gnu/glib-2.0/include", // for glibconfig.h (WSL)
                 "${env:PROJECTM_ROOT}/include"
             ],
             "defines": [
