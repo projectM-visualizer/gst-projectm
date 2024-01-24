@@ -7,7 +7,7 @@
                 "${env:VCPKG}/installed/x64-windows/include",
                 "${env:VCPKG}/installed/x64-windows/include/gstreamer-1.0",
                 "${env:VCPKG}/installed/x64-windows/include/glib-2.0",
-                "${env:PROJECTM_DIR}/include"
+                "${env:PROJECTM_ROOT}/include"
             ],
             "defines": [
                 "_DEBUG",
@@ -19,6 +19,26 @@
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include",
+                "/usr/include/gstreamer-1.0",
+                "/usr/include/glib-2.0",
+                "/usr/lib/x86_64-linux-gnu/glib-2.0/include",
+                "${env:PROJECTM_ROOT}/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4

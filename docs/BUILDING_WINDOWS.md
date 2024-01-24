@@ -6,7 +6,8 @@
 * [Visual Studio 2017](https://www.visualstudio.com/downloads/) (Community edition is fine)
 * [Vcpkg](https://github.com/Microsoft/vcpkg)
 * [CMake](https://cmake.org/download/) (3.8 or higher)
-* [GStreamer](https://gstreamer.freedesktop.org/download/) (1.16 or higher) **[NOT NEEDED TO BUILD]**
+* [GStreamer](https://gstreamer.freedesktop.org/download/) (1.16 or higher)
+* [ProjectM](https://github.com/projectM-visualizer/projectm) (4.0 or higher)
 
 ### Building
 
@@ -18,12 +19,12 @@ git clone https://github.com/anomievision/gst-plugin-projectm.git
 
 2. Set Environment Variables
 
-- PROJECTM - Path to built projectM directory
-- VCPKG - Path to vcpkg installtion directory
+- PROJECTM_ROOT - Path to built projectM directory
+- VCPKG_ROOT - Path to vcpkg installtion directory
 
 ```powershell
-[Environment]::SetEnvironmentVariable("PROJECTM", YOUR_PATH_HERE, "User")
-[Environment]::SetEnvironmentVariable("VCPKG", YOUR_PATH_HERE, "User")
+[Environment]::SetEnvironmentVariable("PROJECTM_ROOT", YOUR_PATH_HERE, "User")
+[Environment]::SetEnvironmentVariable("VCPKG_ROOT", YOUR_PATH_HERE, "User")
 ```
 
 3. Run build script
@@ -37,10 +38,12 @@ git clone https://github.com/anomievision/gst-plugin-projectm.git
 ### Installing
 
 #### Automatic
+
 The build script will ask if you want to install the plugin.
 
 #### Manual
-1. Copy the built plugin to the GStreamer plugins directory or create your own.
+
+1. Create GStreamer plugins directory.
 
 ```powershell
 New-Item -Path "$Env:USERPROFILE\.gstreamer\1.0\plugins" -ItemType Directory | Out-Null
@@ -62,6 +65,6 @@ Copy-Item -Path "dist\gstprojectm.dll" -Destination "$Env:USERPROFILE\.gstreamer
 
 To utilize the plugin with the example, please install GStreamer
 
-```
+```powershell
 gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
 ```

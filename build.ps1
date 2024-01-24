@@ -1,11 +1,11 @@
 # Check if environment variables are set
-if (!$Env:PROJECTM_DIR) {
-    Write-Host "PROJECTM4_DIR environment variable not set"
+if (!$Env:PROJECTM_ROOT) {
+    Write-Host "PROJECTM_ROOT environment variable not set"
     exit 1
 }
 
-if (!$Env:VCPKG) {
-    Write-Host "VCPKG environment variable not set"
+if (!$Env:VCPKG_ROOT) {
+    Write-Host "VCPKG_ROOT environment variable not set"
     exit 1
 }
 
@@ -21,20 +21,27 @@ $ROOT = Get-Location
 $BUILD = "$ROOT\build"
 $DIST = "$ROOT\dist"
 
-# Clean up previous build files
-if ($AUTO -eq "false") {
-    # Ask to clean
-    Write-Host
-    Write-Host "Clean previous build? [Y/n]"
-    $CLEAN_ANSWER = Read-Host
-} else {
-    $CLEAN_ANSWER = "Y"
+# Clean up previous build files, if found
+if (Test-Path "$BUILD" || Test-Path "$DIST") {
+    if ($AUTO -eq "false") {
+        # Ask to clean
+        Write-Host
+        Write-Host "Clean previous build? [Y/n]"
+        $CLEAN_ANSWER = Read-Host
+    } else {
+        $CLEAN_ANSWER = "Y"
+    }
+
+    if ($CLEAN_ANSWER -ne "N" -and $CLEAN_ANSWER -ne "n") {
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
+        Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$DIST"
+    }
 }
 
-if ($CLEAN_ANSWER -ne "N" -and $CLEAN_ANSWER -ne "n") {
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
-    Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$DIST"
+if (!(Test-Path "$BUILD")) {
     New-Item -Path "$BUILD" -ItemType Directory | Out-Null
+}
+if (!(Test-Path "$DIST")) {
     New-Item -Path "$DIST" -ItemType Directory | Out-Null
 }
 
@@ -44,11 +51,11 @@ cmake `
     -A "X64" `
     -S "$ROOT" `
     -B "$BUILD" `
-    -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG}/scripts/buildsystems/vcpkg.cmake" `
+    -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" `
     -DVCPKG_TARGET_TRIPLET=x64-windows `
     -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" `
     -DCMAKE_VERBOSE_MAKEFILE=YES `
-    -DCMAKE_PREFIX_PATH="${Env:PROJECTM_DIR}/lib/cmake/projectM4"
+    -DCMAKE_PREFIX_PATH="${Env:PROJECTM_ROOT}/lib/cmake/projectM4"
 
 # Build
 cmake --build "$BUILD" --config "Release" --parallel
@@ -95,6 +102,6 @@ if (Test-Path "$BUILD\Release\gstprojectm.dll") {
     }
 }
 else {
-    Write-Host "Build failed"
+    Write-Host "Build failed!"
     exit 1
 }

@@ -1,18 +1,18 @@
 # Check if gst-inspect-1.0 is installed
 if (!(Get-Command gst-inspect-1.0 -ErrorAction SilentlyContinue)) {
-    Write-Host "Unable to find: gst-inspect-1.0"
+    Write-Host "gst-inspect-1.0 is not installed. Please install it and try again."
     exit 1
 }
 
 # Check if gst-launch-1.0 is installed
 if (!(Get-Command gst-launch-1.0 -ErrorAction SilentlyContinue)) {
-    Write-Host "Unable to find: gst-launch-1.0"
+    Write-Host "gst-launch-1.0 is not installed. Please install it and try again."
     exit 1
 }
 
 # Check if plugin is installed
 if (!(Test-Path "$Env:GST_PLUGIN_PATH\gstprojectm.dll")) {
-    Write-Host "Missing plugin: gstprojectm.dll"
+    Write-Host "gstprojectm.dll is missing. Please install it and try again."
     exit 1
 }
 
