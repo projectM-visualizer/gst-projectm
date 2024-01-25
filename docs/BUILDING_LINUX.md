@@ -16,19 +16,19 @@
 git clone https://github.com/anomievision/gst-plugin-projectm.git
 ``` 
 
-2. Install dependencies
+2. Setup
 
 ```bash
-# apt
-sudo apt update
-sudo apt install -y ninja-build mesa-common-dev build-essential git cmake pkg-config libgstreamer1.0-dev libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-dev
+./setup.sh
+# OR
+./setup.sh --auto # Skips prompts by using default options
 
-# pacman
-sudo pacman -Syu
-sudo pacman -S base-devel ninja cmake mesa gst-plugins-base-libs
+# Fixes
+# - Fix missing "#include <gst/gl/gstglconfig.h>"
+./setup.sh --fixes
 ```
 
-3. Set Environment Variables
+1. Set Environment Variables
 
 - PROJECTM_ROOT - Path to built projectM directory
 

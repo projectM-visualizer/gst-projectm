@@ -18,12 +18,12 @@
 git clone https://github.com/anomievision/gst-plugin-projectm.git
 ``` 
 
-2. Install dependencies
+2. Setup
 
 ```bash
-# brew
-brew update
-brew install git ninja cmake gstreamer
+./setup.sh
+# OR
+./setup.sh --auto # Skips prompts by using default options
 ```
 
 3. Set Environment Variables
