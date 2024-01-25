@@ -1,8 +1,3 @@
-/*
- * GStreamer
- * Copyright (C) 2024 AnomieVision <>
- */
-
 #ifndef __GST_PROJECTM_ENUMS_H__
 #define __GST_PROJECTM_ENUMS_H__
 
@@ -13,12 +8,7 @@ G_BEGIN_DECLS
 /*
  * Properties
  */
-enum
-{
-  PROP_0,
-  PROP_CONTEXT,
-  PROP_LOCATION
-};
+enum { PROP_0, PROP_CONTEXT, PROP_LOCATION };
 
 G_END_DECLS
 

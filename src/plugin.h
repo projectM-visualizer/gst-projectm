@@ -1,8 +1,3 @@
-/*
- * GStreamer
- * Copyright (C) 2024 AnomieVision <>
- */
-
 #ifndef __GST_PROJECTM_H__
 #define __GST_PROJECTM_H__
 

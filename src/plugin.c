@@ -110,7 +110,59 @@ void gst_projectm_get_property(GObject *object, guint property_id,
   }
 }
 
-static void gst_plugin_projectm_init_instance(GstProjectM *plugin)
+static void gst_projectm_init(GstProjectM *plugin)
+{
+  // Here to prevent compile errors
+}
+
+static void gst_projectm_finalize(GObject *object)
+{
+  GstProjectM *plugin = GST_PROJECTM(object);
+
+  if (plugin->framebuffer)
+    free(plugin->framebuffer);
+  if (plugin->handle)
+    projectm_destroy(plugin->handle);
+
+  G_OBJECT_CLASS(gst_projectm_parent_class)->finalize(object);
+}
+
+static void gst_projectm_class_init(GstProjectMClass *klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *)klass;
+  GstElementClass *element_class = (GstElementClass *)klass;
+  GstAudioVisualizerClass *scope_class = (GstAudioVisualizerClass *)klass;
+
+  // Setup caps
+  const gchar *audio_sink_caps = get_audio_sink_cap(0);
+  const gchar *video_src_caps = get_video_src_cap(0);
+
+  gst_element_class_add_pad_template(GST_ELEMENT_CLASS(klass),
+                                     gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+                                                          gst_caps_from_string(video_src_caps)));
+  gst_element_class_add_pad_template(GST_ELEMENT_CLASS(klass),
+                                     gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+                                                          gst_caps_from_string(audio_sink_caps)));
+
+  gst_element_class_set_static_metadata(GST_ELEMENT_CLASS(klass),
+                                        "ProjectM Visualizer", "Generic", "A plugin for visualizing music using ProjectM",
+                                        "Tristan Charpentier <tristan_charpentier@hotmail.com>");
+
+  gobject_class->set_property = gst_projectm_set_property;
+  gobject_class->get_property = gst_projectm_get_property;
+
+  g_object_class_install_property(gobject_class, PROP_LOCATION,
+                                  g_param_spec_string("preset", "Preset file Location",
+                                                      "Location of the MilkDrop preset", "/home/tristan/dev/gst/trido/presets/Supernova/Shimmer/EoS - starburst 05 phasing.milk",
+                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gobject_class->finalize = gst_projectm_finalize;
+
+  scope_class->setup = GST_DEBUG_FUNCPTR(projectm_setup);
+  scope_class->render = GST_DEBUG_FUNCPTR(projectm_render);
+}
+
+static void projectm_init_instance(GstProjectM *plugin)
 {
   GstGLContext *other = gst_gl_context_get_current();
   if (other)
@@ -168,64 +220,12 @@ static void gst_plugin_projectm_init_instance(GstProjectM *plugin)
   plugin->handle = projectMHandle;
 }
 
-static void gst_projectm_init(GstProjectM *plugin)
-{
-  // Here to prevent compile errors
-}
-
-static void gst_projectm_finalize(GObject *object)
-{
-  GstProjectM *plugin = GST_PROJECTM(object);
-
-  if (plugin->framebuffer)
-    free(plugin->framebuffer);
-  if (plugin->handle)
-    projectm_destroy(plugin->handle);
-
-  G_OBJECT_CLASS(gst_projectm_parent_class)->finalize(object);
-}
-
-static void gst_projectm_class_init(GstProjectMClass *klass)
-{
-  GObjectClass *gobject_class = (GObjectClass *)klass;
-  GstElementClass *element_class = (GstElementClass *)klass;
-  GstAudioVisualizerClass *scope_class = (GstAudioVisualizerClass *)klass;
-
-  // Setup caps
-  const gchar *audio_sink_caps = get_audio_sink_cap(0);
-  const gchar *video_src_caps = get_video_src_cap(0);
-
-  gst_element_class_add_pad_template(GST_ELEMENT_CLASS(klass),
-                                     gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-                                                          gst_caps_from_string(video_src_caps)));
-  gst_element_class_add_pad_template(GST_ELEMENT_CLASS(klass),
-                                     gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-                                                          gst_caps_from_string(audio_sink_caps)));
-
-  gst_element_class_set_static_metadata(GST_ELEMENT_CLASS(klass),
-                                        "ProjectM Visualizer", "Generic", "A plugin for visualizing music using ProjectM",
-                                        "Tristan Charpentier <tristan_charpentier@hotmail.com>");
-
-  gobject_class->set_property = gst_projectm_set_property;
-  gobject_class->get_property = gst_projectm_get_property;                    
-
-  g_object_class_install_property(gobject_class, PROP_LOCATION,
-                                  g_param_spec_string("preset", "Preset file Location",
-                                                      "Location of the MilkDrop preset", "/home/tristan/dev/gst/trido/presets/Supernova/Shimmer/EoS - starburst 05 phasing.milk",
-                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  gobject_class->finalize = gst_projectm_finalize;
-
-  scope_class->setup = GST_DEBUG_FUNCPTR(projectm_setup);
-  scope_class->render = GST_DEBUG_FUNCPTR(projectm_render);
-}
-
 static gboolean projectm_setup(GstAudioVisualizer *bscope)
 {
   GstProjectM *projectm = GST_PROJECTM(bscope);
   gint depth;
 
-  gst_plugin_projectm_init_instance(projectm);
+  projectm_init_instance(projectm);
 
   if (projectm->preset)
     projectm_load_preset_file(projectm->handle, projectm->preset, false);
