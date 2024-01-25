@@ -72,10 +72,11 @@ jobs:
           name: projectm-linux-shared-latest
           path: artifacts
 
-      - name: Install Packages
+      - name: Install Packages and Apply fixes
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build libgl1-mesa-dev mesa-common-dev build-essential libglm-dev pkg-config libgstreamer1.0-dev libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-dev libunwind-dev
+          sudo apt-get install -y ninja-build mesa-common-dev build-essential libgl1-mesa-dev libglm-dev pkg-config libgstreamer1.0-dev libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-dev libunwind-dev
+          ./setup.sh --fixes
 
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"

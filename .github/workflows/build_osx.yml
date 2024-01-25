@@ -72,10 +72,11 @@ jobs:
           name: projectm-osx-shared-latest
           path: artifacts
 
-      - name: Install Packages
+      - name: Install Packages and Apply fixes
         run: |
           brew update
           brew install ninja gstreamer || true
+          ./setup.sh --fixes
         
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"
