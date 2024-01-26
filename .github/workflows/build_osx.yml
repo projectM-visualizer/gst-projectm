@@ -75,6 +75,10 @@ jobs:
       - name: Install Packages
         run: |
           ./setup.sh --auto
+
+      # - name: Debugging
+      #   run: |
+      #     ls -R /usr/local/Cellar/gstreamer/1.22.8_2
         
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"

@@ -7,6 +7,7 @@
 * [Git](https://git-scm.com/download/win)
 * [Ninja](https://github.com/ninja-build/ninja)
 * [CMake](https://cmake.org/download/) (3.8 or higher)
+* [Brew](https://brew.sh/)
 * [GStreamer](https://gstreamer.freedesktop.org/download/) (1.16 or higher)
 * [ProjectM](https://github.com/projectM-visualizer/projectm) (4.0 or higher)
 

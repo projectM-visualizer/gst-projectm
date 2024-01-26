@@ -84,6 +84,7 @@ FIND_GSTREAMER_COMPONENT(GSTREAMER_BASE gstreamer-base-1.0 gst/base/gstadapter.h
 # 1.2. Include the new path for gst/gl/gstglconfig.h
 if(NOT WIN32)
 	set(GSTREAMER_GL_HINT_PATHS
+		/usr/lib/gstreamer-1.0/include
 		/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include
 		/usr/lib/alpha-linux-gnu/gstreamer-1.0/include
 		/usr/lib/arm-linux-gnueabi/gstreamer-1.0/include 
