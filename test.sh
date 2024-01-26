@@ -19,4 +19,17 @@ fi
 echo
 # gst-inspect-1.0 projectm
 
-GST_DEBUG=3 gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+# GST_DEBUG=3 gst-launch-1.0 -v \
+#     audiotestsrc ! queue ! audioconvert ! \
+#     projectm preset="test/presets/215-wave.milk" \
+#     ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+
+# GST_DEBUG=3 gst-launch-1.0 -v \
+#   filesrc location="test/audio/blast.mp3" ! decodebin ! audioconvert ! \
+#   projectm ! videoconvert ! x264enc ! mp4mux ! filesink location="test/output/test_video.mp4"
+
+GST_DEBUG=3 gst-launch-1.0 -v \
+  filesrc location="test/audio/upbeat-future-bass.mp3" ! decodebin name=dec ! \
+  audioconvert ! avenc_aac ! avmux_mp4 ! filesink location="test/output/video2.mp4" \
+  dec. ! \
+  projectm ! videoconvert ! x264enc ! avenc_mp4 ! avmux_mp4.video_0
