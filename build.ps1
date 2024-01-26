@@ -22,7 +22,7 @@ $BUILD = "$ROOT\build"
 $DIST = "$ROOT\dist"
 
 # Clean up previous build files, if found
-if (Test-Path "$BUILD" || Test-Path "$DIST") {
+if ((Test-Path "$BUILD") -or (Test-Path "$DIST")) {
     if ($AUTO -eq "false") {
         # Ask to clean
         Write-Host
