@@ -75,7 +75,6 @@ jobs:
       - name: Install Packages and Apply fixes
         run: |
           ./setup.sh --auto
-          ./setup.sh --fixes
         
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"

@@ -199,27 +199,6 @@ EOF
     fi
 }
 
-# Prompt user to apply fixes
-prompt_apply_fixes() {
-    local AUTO=$1
-    if [ $AUTO = false ]; then
-        echo
-        echo "The following fixes are available:"
-        echo "  - Missing gst/gl/gstglconfig.h"
-        echo -n "Apply fixes? (Y/n): "
-        read -r APPLY_FIXES
-    else
-        APPLY_FIXES="Y"
-    fi
-    
-    if [[ "$APPLY_FIXES" != "N" && "$APPLY_FIXES" != "n" ]]; then
-        fix_missing_gstglconfig_h
-    else
-        echo
-        echo "Skipping fixes."
-    fi
-}
-
 # ------------
 # Main
 
@@ -228,9 +207,6 @@ AUTO=false
 # Skip prompt if --auto is passed
 if [ "$1" = "--auto" ] ; then
     AUTO=true
-    elif [ "$1" = "--fixes" ] ; then
-    prompt_apply_fixes true
-    exit 0
 fi
 
 prompt_install_dependencies $AUTO

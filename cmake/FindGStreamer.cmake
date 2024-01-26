@@ -79,7 +79,37 @@ FIND_GSTREAMER_COMPONENT(GSTREAMER gstreamer-1.0 gst/gst.h gstreamer-1.0)
 FIND_GSTREAMER_COMPONENT(GSTREAMER_CONFIG gstreamer-1.0 gst/gstconfig.h gstreamer-1.0)
 FIND_GSTREAMER_COMPONENT(GSTREAMER_BASE gstreamer-base-1.0 gst/base/gstadapter.h gstbase-1.0)
 
-# 1.2. Check GStreamer version
+# 1.2. Include the new path for gst/gl/gstglconfig.h
+if(NOT WIN32)
+	set(GSTREAMER_GL_HINT_PATHS
+		/usr/include/gstreamer-1.0
+		/usr/lib/$ENV{DEB_HOST_MULTIARCH}/gstreamer-1.0/include
+		/opt/local/include/gstreamer-1.0
+		/opt/local/opt/gstreamer-1.0
+		/usr/local/Cellar/gstreamer-1.0
+	)
+
+	set(GSTREAMER_GL_CONFIG_INCLUDE_DIRS)
+
+	foreach(path IN LISTS GSTREAMER_GL_HINT_PATHS)
+		find_path(GSTREAMER_GL_CONFIG_INCLUDE_DIR
+			NAMES gst/gl/gstglconfig.h
+			HINTS ${path}
+			# PATH_SUFFIXES gstreamer-1.0
+		)
+		if(GSTREAMER_GL_CONFIG_INCLUDE_DIR)
+			set(GSTREAMER_GL_CONFIG_INCLUDE_DIRS ${GSTREAMER_GL_CONFIG_INCLUDE_DIR} CACHE PATH "Path to GStreamer GL include directory")
+			break()
+		endif()
+	endforeach()
+
+	# Output the results to the console
+	message(STATUS "GSTREAMER_GL_CONFIG_INCLUDE_DIRS: ${GSTREAMER_GL_CONFIG_INCLUDE_DIRS}")
+endif()
+
+list(APPEND GSTREAMER_INCLUDE_DIRS ${GSTREAMER_GL_CONFIG_INCLUDE_DIRS})
+
+# 1.3. Check GStreamer version
 if (GSTREAMER_INCLUDE_DIRS)
 	if (EXISTS "${GSTREAMER_INCLUDE_DIRS}/gst/gstversion.h")
 		file(READ "${GSTREAMER_INCLUDE_DIRS}/gst/gstversion.h" GSTREAMER_VERSION_CONTENTS)
