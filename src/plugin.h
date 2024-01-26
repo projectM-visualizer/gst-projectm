@@ -21,16 +21,41 @@ struct _GstProjectM
   GstGLWindow *window;
   GstGLContext *context;
 
-  projectm_handle handle;
   uint8_t *framebuffer;
-  gchar *preset;
-  gint texture;
+
+  projectm_handle handle;
+  
+  gchar *preset_path;
+  gchar *texture_dir_path;
+
+  gfloat beat_sensitivity;
+  gdouble hard_cut_duration;
+  gboolean hard_cut_enabled;
+  gfloat hard_cut_sensitivity;
+  gdouble soft_cut_duration;
+  gdouble preset_duration;
+  gulong mesh_width;
+  gulong mesh_height;
+  gint32 fps;
+  gboolean aspect_correction;
+  gfloat easter_egg;
+  gboolean preset_locked;
+  gulong window_width;
+  gulong window_height;
 };
 
 struct _GstProjectMClass
 {
   GstAudioVisualizerClass parent_class;
 };
+
+const gchar *get_audio_sink_cap(unsigned int type);
+
+const gchar *get_video_src_cap(unsigned int type);
+
+static void gl_error_handler(GstGLContext *context, gpointer data);
+
+static void gst_projectm_log_handler (const char *message, const char *funcname, void *priv);
 
 static void gst_projectm_set_property(GObject *object, guint prop_id,
                                       const GValue *value,
@@ -46,8 +71,6 @@ static void gst_projectm_finalize(GObject *object);
 static void gst_projectm_class_init(GstProjectMClass *klass);
 
 static gboolean plugin_init(GstPlugin *plugin);
-
-static void check_gl_error(GstGLContext *context, gpointer data);
 
 static void projectm_init_instance(GstProjectM *plugin);
 
