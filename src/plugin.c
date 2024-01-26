@@ -26,6 +26,19 @@ G_DEFINE_TYPE_WITH_CODE(GstProjectM, gst_projectm, GST_TYPE_AUDIO_VISUALIZER,
 #define RGB_ORDER_CAPS "BGRx, BGR"
 #endif
 
+#define DEFAULT_PRESET_PATH NULL
+#define DEFAULT_TEXTURE_DIR_PATH NULL
+#define DEFAULT_BEAT_SENSITIVITY 1.0
+#define DEFAULT_HARD_CUT_DURATION 3.0
+#define DEFAULT_HARD_CUT_ENABLED FALSE
+#define DEFAULT_HARD_CUT_SENSITIVITY 1.0
+#define DEFAULT_SOFT_CUT_DURATION 3.0
+#define DEFAULT_PRESET_DURATION 0.0
+#define DEFAULT_MESH_SIZE "48,32"
+#define DEFAULT_ASPECT_CORRECTION TRUE
+#define DEFAULT_EASTER_EGG 0.0
+#define DEFAULT_PRESET_LOCKED TRUE
+
 const gchar *get_audio_sink_cap(unsigned int type)
 {
   const char *format;
@@ -129,21 +142,21 @@ void gst_projectm_set_property(GObject *object, guint property_id,
       plugin->mesh_height = height;
 
       g_strfreev(parts);
-      break;
-    case PROP_ASPECT_CORRECTION:
-      plugin->aspect_correction = g_value_get_boolean(value);
-      break;
-    case PROP_EASTER_EGG:
-      plugin->easter_egg = g_value_get_float(value);
-      break;
-    case PROP_PRESET_LOCKED:
-      plugin->preset_locked = g_value_get_boolean(value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
-      break;
     }
   }
+  break;
+  case PROP_ASPECT_CORRECTION:
+    plugin->aspect_correction = g_value_get_boolean(value);
+    break;
+  case PROP_EASTER_EGG:
+    plugin->easter_egg = g_value_get_float(value);
+    break;
+  case PROP_PRESET_LOCKED:
+    plugin->preset_locked = g_value_get_boolean(value);
+    break;
+  default:
+    G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
+    break;
   }
 }
 
@@ -204,7 +217,35 @@ void gst_projectm_get_property(GObject *object, guint property_id,
 
 static void gst_projectm_init(GstProjectM *plugin)
 {
-  // Here to prevent compile errors
+  // Set default values for properties
+  plugin->preset_path = DEFAULT_PRESET_PATH;
+  plugin->texture_dir_path = DEFAULT_TEXTURE_DIR_PATH;
+  plugin->beat_sensitivity = DEFAULT_BEAT_SENSITIVITY;
+  plugin->hard_cut_duration = DEFAULT_HARD_CUT_DURATION;
+  plugin->hard_cut_enabled = DEFAULT_HARD_CUT_ENABLED;
+  plugin->hard_cut_sensitivity = DEFAULT_HARD_CUT_SENSITIVITY;
+  plugin->soft_cut_duration = DEFAULT_SOFT_CUT_DURATION;
+  plugin->preset_duration = DEFAULT_PRESET_DURATION;
+
+  const gchar *meshSizeStr = DEFAULT_MESH_SIZE;
+  gint width, height;
+
+  gchar **parts = g_strsplit(meshSizeStr, ",", 2);
+
+  if (parts && g_strv_length(parts) == 2)
+  {
+    width = atoi(parts[0]);
+    height = atoi(parts[1]);
+
+    plugin->mesh_width = width;
+    plugin->mesh_height = height;
+
+    g_strfreev(parts);
+  }
+
+  plugin->aspect_correction = DEFAULT_ASPECT_CORRECTION;
+  plugin->easter_egg = DEFAULT_EASTER_EGG;
+  plugin->preset_locked = DEFAULT_PRESET_LOCKED;
 }
 
 static void gst_projectm_finalize(GObject *object)
@@ -225,6 +266,7 @@ static void gst_projectm_class_init(GstProjectMClass *klass)
   GstElementClass *element_class = (GstElementClass *)klass;
   GstAudioVisualizerClass *scope_class = (GstAudioVisualizerClass *)klass;
 
+  // Setup audio and video caps
   const gchar *audio_sink_caps = get_audio_sink_cap(0);
   const gchar *video_src_caps = get_video_src_cap(0);
 
@@ -239,76 +281,80 @@ static void gst_projectm_class_init(GstProjectMClass *klass)
                                         "ProjectM Visualizer", "Generic", "A plugin for visualizing music using ProjectM",
                                         "Blaquewithaq <> | Tristan Charpentier <tristan_charpentier@hotmail.com>");
 
+  // Setup properties
   gobject_class->set_property = gst_projectm_set_property;
   gobject_class->get_property = gst_projectm_get_property;
 
   g_object_class_install_property(gobject_class, PROP_PRESET_PATH,
                                   g_param_spec_string("preset", "Preset",
                                                       "Specifies the path to the preset file. The preset file determines the visual style and behavior of the audio visualizer.",
-                                                      NULL,
+                                                      DEFAULT_PRESET_PATH,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_TEXTURE_DIR_PATH,
                                   g_param_spec_string("texture-dir", "Texture Directory",
                                                       "Sets the path to the directory containing textures used in the visualizer.",
-                                                      NULL,
+                                                      DEFAULT_TEXTURE_DIR_PATH,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_BEAT_SENSITIVITY,
                                   g_param_spec_float("beat-sensitivity", "Beat Sensitivity",
                                                      "Controls the sensitivity to audio beats. Higher values make the visualizer respond more strongly to beats.",
-                                                     0.0, 5.0, 1.0,
+                                                     0.0, 5.0, DEFAULT_BEAT_SENSITIVITY,
                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_HARD_CUT_DURATION,
                                   g_param_spec_double("hard-cut-duration", "Hard Cut Duration",
                                                       "Sets the duration, in seconds, for hard cuts. Hard cuts are abrupt transitions in the visualizer.",
-                                                      0.0, 999999.0, 3.0,
+                                                      0.0, 999999.0, DEFAULT_HARD_CUT_DURATION,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_HARD_CUT_ENABLED,
                                   g_param_spec_boolean("hard-cut-enabled", "Hard Cut Enabled",
-                                                       "Enables or disables hard cuts. When enabled, the visualizer may exhibit sudden transitions based on the audio input.", FALSE,
+                                                       "Enables or disables hard cuts. When enabled, the visualizer may exhibit sudden transitions based on the audio input.",
+                                                       DEFAULT_HARD_CUT_ENABLED,
                                                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_HARD_CUT_SENSITIVITY,
                                   g_param_spec_float("hard-cut-sensitivity", "Hard Cut Sensitivity",
-                                                     "Adjusts the sensitivity of the visualizer to hard cuts. Higher values increase the responsiveness to abrupt changes in audio.", 0.0, 1.0, 1.0,
+                                                     "Adjusts the sensitivity of the visualizer to hard cuts. Higher values increase the responsiveness to abrupt changes in audio.",
+                                                     0.0, 1.0, DEFAULT_HARD_CUT_SENSITIVITY,
                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_SOFT_CUT_DURATION,
                                   g_param_spec_double("soft-cut-duration", "Soft Cut Duration",
                                                       "Sets the duration, in seconds, for soft cuts. Soft cuts are smoother transitions between visualizer states.",
-                                                      0.0, 999999.0, 3.0,
+                                                      0.0, 999999.0, DEFAULT_SOFT_CUT_DURATION,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_PRESET_DURATION,
                                   g_param_spec_double("preset-duration", "Preset Duration",
                                                       "Sets the duration, in seconds, for each preset. A zero value causes the preset to play indefinitely.",
-                                                      0.0, 999999.0, 0.0,
+                                                      0.0, 999999.0, DEFAULT_PRESET_DURATION,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_MESH_SIZE,
                                   g_param_spec_string("mesh-size", "Mesh Size",
                                                       "Sets the size of the mesh used in rendering. The format is 'width,height'.",
-                                                      "48,32",
+                                                      DEFAULT_MESH_SIZE,
                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_ASPECT_CORRECTION,
                                   g_param_spec_boolean("aspect-correction", "Aspect Correction",
                                                        "Enables or disables aspect ratio correction. When enabled, the visualizer adjusts for aspect ratio differences in rendering.",
-                                                       TRUE,
+                                                       DEFAULT_ASPECT_CORRECTION,
                                                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_EASTER_EGG,
                                   g_param_spec_float("easter-egg", "Easter Egg",
                                                      "DControls the activation of an Easter Egg feature. The value determines the likelihood of triggering the Easter Egg.",
-                                                     0.0, 1.0, 0.0,
+                                                     0.0, 1.0, DEFAULT_EASTER_EGG,
                                                      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property(gobject_class, PROP_PRESET_LOCKED,
                                   g_param_spec_boolean("preset-locked", "Preset Locked",
-                                                       "Locks or unlocks the current preset. When locked, the visualizer remains on the current preset without automatic changes.", TRUE,
+                                                       "Locks or unlocks the current preset. When locked, the visualizer remains on the current preset without automatic changes.",
+                                                       DEFAULT_PRESET_LOCKED,
                                                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_projectm_finalize;
@@ -412,6 +458,20 @@ static gboolean projectm_setup(GstAudioVisualizer *bscope)
 
   // Log audio info description
   GST_LOG_OBJECT(plugin, "%s", bscope->ainfo.finfo->description);
+
+  // Log All Setttings
+  g_print("\npreset: %s", plugin->preset_path);
+  g_print("\ntexture-dir: %s", plugin->texture_dir_path);
+  g_print("\nbeat-sensitivity: %f", plugin->beat_sensitivity);
+  g_print("\nhard-cut-duration: %f", plugin->hard_cut_duration);
+  g_print("\nhard-cut-enabled: %d", plugin->hard_cut_enabled);
+  g_print("\nhard-cut-sensitivity: %f", plugin->hard_cut_sensitivity);
+  g_print("\nsoft-cut-duration: %f", plugin->soft_cut_duration);
+  g_print("\npreset-duration: %f", plugin->preset_duration);
+  g_print("\nmesh-size: %d,%d", plugin->mesh_width, plugin->mesh_height);
+  g_print("\naspect-correction: %d", plugin->aspect_correction);
+  g_print("\neaster-egg: %f", plugin->easter_egg);
+  g_print("\npreset-locked: %d\n\n", plugin->preset_locked);
 
   // Set various ProjectM parameters
   projectm_set_fps(plugin->handle, bscope->vinfo.fps_n);

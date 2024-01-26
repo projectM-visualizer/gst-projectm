@@ -16,20 +16,50 @@ if [ ! -f "$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.so" ]; then
     exit 1
 fi
 
+# Check if output directory exists, if not create it
+if [ ! -d "test/output" ]; then
+    mkdir -p test/output
+fi
+
 echo
-# gst-inspect-1.0 projectm
+echo
 
-# GST_DEBUG=3 gst-launch-1.0 -v \
-#     audiotestsrc ! queue ! audioconvert ! \
-#     projectm preset="test/presets/215-wave.milk" \
-#     ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+case "$1" in
+    "--inspect")
+        gst-inspect-1.0 projectm
+        ;;
 
-# GST_DEBUG=3 gst-launch-1.0 -v \
-#   filesrc location="test/audio/blast.mp3" ! decodebin ! audioconvert ! \
-#   projectm ! videoconvert ! x264enc ! mp4mux ! filesink location="test/output/test_video.mp4"
+    "--audio")
+        GST_DEBUG=3 gst-launch-1.0 -v \
+            audiotestsrc ! queue ! audioconvert ! \
+            projectm \
+            ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+        ;;
 
-GST_DEBUG=3 gst-launch-1.0 -v \
-  filesrc location="test/audio/upbeat-future-bass.mp3" ! decodebin name=dec ! \
-  audioconvert ! avenc_aac ! avmux_mp4 ! filesink location="test/output/video2.mp4" \
-  dec. ! \
-  projectm ! videoconvert ! x264enc ! avenc_mp4 ! avmux_mp4.video_0
+    "--preset")
+        GST_DEBUG=4 gst-launch-1.0 -v \
+            audiotestsrc ! queue ! audioconvert ! \
+            projectm preset="test/presets/215-wave.milk" \
+            ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+        ;;
+
+    "--output-video")
+        GST_DEBUG=3 gst-launch-1.0 -v \
+            filesrc location="test/audio/upbeat-future-bass.mp3" ! decodebin ! audioconvert ! \
+            projectm ! videoscale ! videoconvert ! video/x-raw,width=1280,height=720 ! \
+            x264enc ! mp4mux ! filesink location="test/output/test_video.mp4"
+        ;;
+
+    "--encode-output-video")
+        GST_DEBUG=3 gst-launch-1.0 -v \
+            filesrc location="test/audio/upbeat-future-bass.mp3" ! decodebin name=dec ! \
+            audioconvert ! avenc_aac ! avmux_mp4 ! filesink location="test/output/video2.mp4" \
+            dec. ! \
+            projectm ! videoconvert ! x264enc ! avenc_mp4 ! avmux_mp4.video_0
+        ;;
+
+    *)
+        echo "Usage: $0 [--auto] --inspect|--test-audio|--test-video|--encode-video"
+        exit 1
+        ;;
+esac
