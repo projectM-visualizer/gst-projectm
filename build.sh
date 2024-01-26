@@ -44,7 +44,7 @@ configure_build() {
     -S "$1" \
     -B "$2" \
     -DCMAKE_VERBOSE_MAKEFILE=YES \
-    -DCMAKE_PREFIX_PATH="$3/lib/cmake/projectM4"
+    -DCMAKE_PREFIX_PATH="$PROJECTM_ROOT/lib/cmake/projectM4"
 }
 
 # Build project
@@ -60,7 +60,9 @@ build() {
     fi
 }
 
-prompt_install_build() {
+# Prompt user to install build
+prompt_install() {
+    # Install to gstreamer plugin, if found
     if [ -f "$2/libgstprojectm.so" ] ; then
         if [ "$1" = false ] ; then
             echo
@@ -101,7 +103,7 @@ if [ -d "/usr/local/include/projectM-4" ] ; then
     export PROJECTM_ROOT="/usr/local"
 else
     if [ -z "$PROJECTM_ROOT" ] ; then
-        echo "PROJECTM_ROOT is not set!"
+        echo "PROJECTM_ROOT environment variable is not set!"
         exit 1
     fi
 fi
@@ -119,6 +121,6 @@ BUILD="$ROOT/build"
 DIST="$ROOT/dist"
 
 prompt_clean_build "$AUTO" "$BUILD" "$DIST"
-configure_build "$ROOT" "$BUILD" "$PROJECTM_ROOT"
+configure_build "$ROOT" "$BUILD"
 build "$BUILD" "$DIST"
-prompt_install_build "$AUTO" "$DIST"
+prompt_install "$AUTO" "$DIST"

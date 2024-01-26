@@ -4,9 +4,9 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${env:VCPKG}/installed/x64-windows/include",
-                "${env:VCPKG}/installed/x64-windows/include/gstreamer-1.0",
-                "${env:VCPKG}/installed/x64-windows/include/glib-2.0",
+                "${env:VCPKG_ROOT}/installed/x64-windows/include",
+                "${env:VCPKG_ROOT}/installed/x64-windows/include/gstreamer-1.0",
+                "${env:VCPKG_ROOT}/installed/x64-windows/include/glib-2.0",
                 "${env:PROJECTM_ROOT}/include"
             ],
             "defines": [
