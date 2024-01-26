@@ -72,7 +72,7 @@ jobs:
           name: projectm-linux-shared-latest
           path: artifacts
 
-      - name: Install Packages and Apply fixes
+      - name: Install Packages
         run: |
           ./setup.sh --auto
 
