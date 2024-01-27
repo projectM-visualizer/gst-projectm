@@ -83,7 +83,7 @@ static void gl_error_handler(GstGLContext *context, gpointer data)
 {
   GLuint error = context->gl_vtable->GetError();
   if (error != GL_NONE)
-    g_print("OpenGL Error: 0x%x encountered during processing\n",
+    g_error("OpenGL Error: 0x%x encountered during processing\n",
             error);
 }
 
@@ -511,7 +511,7 @@ static gboolean projectm_setup(GstAudioVisualizer *bscope)
 static gboolean projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
                                 GstVideoFrame *video)
 {
-  GstProjectM *projectm = GST_PROJECTM(bscope);
+  GstProjectM *plugin = GST_PROJECTM(bscope);
   GstMapInfo amap;
   gint16 *adata;
   gint i, channels;
@@ -524,36 +524,36 @@ static gboolean projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
   num_samples = amap.size / (GST_AUDIO_INFO_CHANNELS(&bscope->ainfo) * sizeof(gint16));
 
   GstMemory *mem = gst_buffer_get_all_memory(audio);
-  GST_DEBUG_OBJECT(projectm, "mem size: %lu", mem->size);
+  GST_DEBUG_OBJECT(plugin, "mem size: %lu", mem->size);
 
   gst_buffer_map(audio, &amap, GST_MAP_READ);
 
-  GST_DEBUG_OBJECT(projectm, "samples: %lu, offset: %lu, offset end: %lu, vrate: %d, fps: %d, req_spf: %d", amap.size / 8, audio->offset, audio->offset_end, bscope->ainfo.rate, bscope->vinfo.fps_n, bscope->req_spf);
+  GST_DEBUG_OBJECT(plugin, "samples: %lu, offset: %lu, offset end: %lu, vrate: %d, fps: %d, req_spf: %d", amap.size / 8, audio->offset, audio->offset_end, bscope->ainfo.rate, bscope->vinfo.fps_n, bscope->req_spf);
 
-  projectm_pcm_add_int16(projectm->handle, (gint16 *)amap.data, amap.size / 4, PROJECTM_STEREO);
+  projectm_pcm_add_int16(plugin->handle, (gint16 *)amap.data, amap.size / 4, PROJECTM_STEREO);
 
-  GST_DEBUG_OBJECT(projectm, "audio data: %d %d %d %d", ((gint16 *)amap.data)[100], ((gint16 *)amap.data)[101], ((gint16 *)amap.data)[102], ((gint16 *)amap.data)[103]);
+  GST_DEBUG_OBJECT(plugin, "audio data: %d %d %d %d", ((gint16 *)amap.data)[100], ((gint16 *)amap.data)[101], ((gint16 *)amap.data)[102], ((gint16 *)amap.data)[103]);
 
   gst_video_frame_map(video, &video->info, video->buffer, GST_MAP_READWRITE);
 
-  const GstGLFuncs *gl = projectm->context->gl_vtable;
+  const GstGLFuncs *gl = plugin->context->gl_vtable;
 
   size_t width, height;
 
-  projectm_get_window_size(projectm->handle, &width, &height);
+  projectm_get_window_size(plugin->handle, &width, &height);
   gl->Viewport(0, 0, width, height);
 
-  projectm_opengl_render_frame(projectm->handle);
-  gl_error_handler(projectm->context, projectm);
+  projectm_opengl_render_frame(plugin->handle);
+  gl_error_handler(plugin->context, plugin);
 
-  uint8_t *data = projectm->framebuffer;
+  uint8_t *data = plugin->framebuffer;
 
   gl->ReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
-  GST_DEBUG_OBJECT(projectm, "%d %d %d %d", data[0], data[1], data[2], data[3]);
+  GST_DEBUG_OBJECT(plugin, "%d %d %d %d", data[0], data[1], data[2], data[3]);
 
-  gl_error_handler(projectm->context, projectm);
+  // gl_error_handler(plugin->context, plugin);
 
-  gst_gl_context_swap_buffers(projectm->context);
+  gst_gl_context_swap_buffers(plugin->context);
 
   uint8_t *vdata = ((uint8_t *)(video->data[0]));
 
@@ -574,9 +574,9 @@ static gboolean projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
     vdata[r] = data[r + 3];
   }
 
-  GST_DEBUG_OBJECT(projectm, "v2 %d %d\n", GST_VIDEO_FRAME_N_PLANES(video), ((uint8_t *)(GST_VIDEO_FRAME_PLANE_DATA(video, 0)))[0]);
+  GST_DEBUG_OBJECT(plugin, "v2 %d %d\n", GST_VIDEO_FRAME_N_PLANES(video), ((uint8_t *)(GST_VIDEO_FRAME_PLANE_DATA(video, 0)))[0]);
 
-  GST_DEBUG_OBJECT(projectm, "rendered one frame");
+  GST_DEBUG_OBJECT(plugin, "rendered one frame");
 done:
   gst_buffer_unmap(audio, &amap);
 
