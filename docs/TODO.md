@@ -1,8 +1,8 @@
-# OVERVIEW
-
-## TODO
+# TODO
 
 - [ ] Add a `README.md`
+- [ ] Add debugging funcs for logging
+- [ ] Debug GL issue
 - [ ] Update FindGStreamer
   - Need to figure out path to 'gst/gl/gstglconfig.h' on OSX
 
