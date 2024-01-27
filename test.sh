@@ -43,6 +43,24 @@ case "$1" in
             ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
         ;;
 
+    "--properties")
+        GST_DEBUG=3 gst-launch-1.0 -v \
+            audiotestsrc ! queue ! audioconvert ! \
+            projectm \
+            preset="test/presets/215-wave.milk" \
+            texture-dir="test/textures" \
+            beat-sensitivity=0.5 \
+            hard-cut-duration=1 \
+            hard-cut-enabled=true \
+            hard-cut-sensitivity=0.5 \
+            soft-cut-duration=1 \
+            preset-duration=30 \
+            mesh-size="512,512" \
+            easter-egg=0.75 \
+            preset-locked=false \
+            ! "video/x-raw,width=512,height=512,framerate=30/1" ! videoconvert ! xvimagesink sync=false
+        ;;
+
     "--output-video")
         GST_DEBUG=3 gst-launch-1.0 -v \
             filesrc location="test/audio/upbeat-future-bass.mp3" ! decodebin ! audioconvert ! \

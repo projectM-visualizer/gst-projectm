@@ -279,7 +279,7 @@ static void gst_projectm_class_init(GstProjectMClass *klass)
 
   gst_element_class_set_static_metadata(GST_ELEMENT_CLASS(klass),
                                         "ProjectM Visualizer", "Generic", "A plugin for visualizing music using ProjectM",
-                                        "Blaquewithaq <> | Tristan Charpentier <tristan_charpentier@hotmail.com>");
+                                        "AnomieVision <anomievision@gmail.com> | Tristan Charpentier <tristan_charpentier@hotmail.com>");
 
   // Setup properties
   gobject_class->set_property = gst_projectm_set_property;
@@ -586,7 +586,7 @@ done:
 static gboolean plugin_init(GstPlugin *plugin)
 {
   GST_DEBUG_CATEGORY_INIT(gst_projectm_debug, "projectm", 0,
-                          "projectm audio visualisations");
+                          "projectM visualizer plugin");
 
   return gst_element_register(plugin, "projectm", GST_RANK_NONE, GST_TYPE_PROJECTM);
 }

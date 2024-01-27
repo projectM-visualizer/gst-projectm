@@ -31,6 +31,7 @@ git clone https://github.com/anomievision/gst-plugin-projectm.git
 1. Set Environment Variables
 
 - PROJECTM_ROOT - Path to built projectM directory
+  - Defaults to "/usr/local" if ProjectM found
 
 ```bash
 echo "export PROJECTM_ROOT=YOUR_PATH_HERE" >> ~/.bashrc
@@ -96,4 +97,15 @@ To utilize the plugin with the example, please install GStreamer
 
 ```bash
 gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+```
+
+### Testing
+
+```bash
+./test.sh --inspect # Inspect the plugin
+./test.sh --audio # Test the plugin with audio
+./test.sh --preset # Test the plugin with a preset
+./test.sh --properties # Test the plugin with properties
+./test.sh --output-video # Test the plugin with video output (video only)
+./test.sh --encode-output-video # Test the plugin with encoded video output (audio/video)
 ```
