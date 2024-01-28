@@ -48,8 +48,6 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-set(CMAKE_SYSTEM_TRIPLET "${CMAKE_SYSTEM_PROCESSOR}-${VENDOR}-${CMAKE_SYSTEM_NAME}")
-
 find_package(PkgConfig REQUIRED QUIET)
 
 # Helper macro to find a GStreamer plugin (or GStreamer itself)
@@ -70,6 +68,18 @@ macro(FIND_GSTREAMER_COMPONENT _component_prefix _pkgconfig_name _header _librar
 		NAMES ${_library}
 		HINTS ${PC_${_component_prefix}_LIBRARY_DIRS} ${PC_${_component_prefix}_LIBDIR}
 	)
+
+	if (${_component_prefix} STREQUAL "GSTREAMER_GL")
+		find_path(GSTREAMER_GL_CONFIG_INCLUDE_DIR
+			NAMES gst/gl/gstglconfig.h
+			HINTS ${CMAKE_SYSTEM_LIBRARY_PATH} ${PC_${_component_prefix}_LIBDIR}
+			PATH_SUFFIXES gstreamer-1.0/include ../lib/gstreamer-1.0/include
+		)
+
+		if(GSTREAMER_GL_CONFIG_INCLUDE_DIR)
+			list(APPEND GSTREAMER_GL_INCLUDE_DIRS ${GSTREAMER_GL_CONFIG_INCLUDE_DIR})
+		endif()
+	endif()
 endmacro()
 
 # ------------------------
@@ -81,54 +91,7 @@ FIND_GSTREAMER_COMPONENT(GSTREAMER gstreamer-1.0 gst/gst.h gstreamer-1.0)
 FIND_GSTREAMER_COMPONENT(GSTREAMER_CONFIG gstreamer-1.0 gst/gstconfig.h gstreamer-1.0)
 FIND_GSTREAMER_COMPONENT(GSTREAMER_BASE gstreamer-base-1.0 gst/base/gstadapter.h gstbase-1.0)
 
-# 1.2. Include the new path for gst/gl/gstglconfig.h
-if(NOT WIN32)
-	set(GSTREAMER_GL_HINT_PATHS
-		/usr/lib/gstreamer-1.0/include
-		/usr/lib/aarch64-linux-gnu/gstreamer-1.0/include
-		/usr/lib/alpha-linux-gnu/gstreamer-1.0/include
-		/usr/lib/arm-linux-gnueabi/gstreamer-1.0/include 
-		/usr/lib/arm-linux-gnueabihf/gstreamer-1.0/include
-		/usr/lib/hppa-linux-gnu/gstreamer-1.0/include
-		/usr/lib/i386-gnu/gstreamer-1.0/include
-		/usr/lib/i386-linux-gnu/gstreamer-1.0/include
-		/usr/lib/ia64-linux-gnu/gstreamer-1.0/include
-		/usr/lib/m68k-linux-gnu/gstreamer-1.0/include
-		/usr/lib/mips-linux-gnu/gstreamer-1.0/include
-		/usr/lib/mips64el-linux-gnuabi64/gstreamer-1.0/include
-		/usr/lib/mipsel-linux-gnu/gstreamer-1.0/include
-		/usr/lib/powerpc-linux-gnu/gstreamer-1.0/include
-		/usr/lib/powerpc-linux-gnuspe/gstreamer-1.0/include
-		/usr/lib/powerpc64-linux-gnu/gstreamer-1.0/include
-		/usr/lib/powerpc64le-linux-gnu/gstreamer-1.0/include
-		/usr/lib/riscv64-linux-gnu/gstreamer-1.0/include
-		/usr/lib/s390x-linux-gnu/gstreamer-1.0/include
-		/usr/lib/sh4-linux-gnu/gstreamer-1.0/include
-		/usr/lib/sparc64-linux-gnu/gstreamer-1.0/include
-		/usr/lib/x86_64-linux-gnu/gstreamer-1.0/include
-		/usr/lib/x86_64-linux-gnux32/gstreamer-1.0/include
-		/usr/include/gstreamer-1.0
-		/opt/local/include/gstreamer-1.0
-		/opt/local/opt/gstreamer-1.0
-		/usr/local/Cellar/gstreamer-1.0
-	)
-
-	set(GSTREAMER_GL_CONFIG_INCLUDE_DIRS)
-
-	foreach(path IN LISTS GSTREAMER_GL_HINT_PATHS)
-		find_path(GSTREAMER_GL_CONFIG_INCLUDE_DIR
-			NAMES gst/gl/gstglconfig.h
-			HINTS ${path}
-			PATH_SUFFIXES gstreamer-1.0
-		)
-		if(GSTREAMER_GL_CONFIG_INCLUDE_DIR)
-			set(GSTREAMER_GL_CONFIG_INCLUDE_DIRS ${GSTREAMER_GL_CONFIG_INCLUDE_DIR} CACHE PATH "Path to GStreamer GL include directory")
-			break()
-		endif()
-	endforeach()
-endif()
-
-# 1.3. Check GStreamer version
+# 1.. Check GStreamer version
 if (GSTREAMER_INCLUDE_DIRS)
 	if (EXISTS "${GSTREAMER_INCLUDE_DIRS}/gst/gstversion.h")
 		file(READ "${GSTREAMER_INCLUDE_DIRS}/gst/gstversion.h" GSTREAMER_VERSION_CONTENTS)
@@ -165,8 +128,6 @@ FIND_GSTREAMER_COMPONENT(GSTREAMER_VIDEO gstreamer-video-1.0 gst/video/video.h g
 
 list(APPEND GSTREAMER_INCLUDE_DIRS ${GSTREAMER_CONFIG_INCLUDE_DIRS})
 list(APPEND GSTREAMER_LIBRARIES ${GSTREAMER_CONFIG_LIBRARIES})
-
-list(APPEND GSTREAMER_GL_INCLUDE_DIRS ${GSTREAMER_GL_CONFIG_INCLUDE_DIRS})
 
 # ------------------------------------------------
 # 3. Process the COMPONENTS passed to FIND_PACKAGE

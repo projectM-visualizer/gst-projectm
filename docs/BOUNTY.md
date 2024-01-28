@@ -12,34 +12,40 @@ Implement a cross-platform GStreamer plug-in for libprojectM
   
 ## Details
 
-#### GStreamer Plug-in
-- [ ] Compiling from source
+- Automated build system (workflow/scripts)
   - [x] Linux
-  - [ ] OSX
+  - [x] OSX
   - [x] Windows
-- [ ] Working with GStreamer
+- Compiling from source
+  - [x] Linux
+  - [x] OSX
+  - [x] Windows
+- Working with GStreamer
   - [x] Linux
   - [ ] OSX
-  - [ ] Windows (after days of testing, I've yet to find a solution to GStreamers linking problem when using plugins)
+  - [ ] Windows (see issues)
 - [x] Accepting an audio/x-raw stream (coded to add more formats later, if needed)
 - [x] Generating a video/x-raw stream (coded to add more formats later, if needed)
 - [x] Utilizing the new C API in libprojectM 4.0
 - [x] Implemented properties with defaults (aka settings)
 
-#### GStreamer Plug-in Testing
 
-- [ ] Tested: Playing an audio stream and outputting a video stream
+#### Testing
+
+- Tested: Playing an audio stream and outputting a video stream
   - [x] Linux
   - [ ] OSX
-  - [ ] Windows
-- [ ] Tested: Turning an audio file into a video file
+  - [ ] Windows (see issues)
+- Tested: Turning an audio file into a video file
   - [x] Linux
-  - [ ] OSX
-  - [ ] Windows
+  - [ ] OSX (see issues)
+  - [ ] Windows (see issues)
 
 ## Issues
 
-- **Windows**: Wont work! After days of testing, I've yet to find a solution to GStreamers linking problem when using plugins. I'm beginning to believe that GStreamer is broken on Windows.
+- **ALL** - GL issue.
+- **Windows**:  ***BROKEN*** - After days of testing, I've yet to find a solution to GStreamers linking problem when using plugins.
+  - Wont run with inspect/launch. DLL dependency issue
 
 ## Contributions
 
@@ -47,5 +53,5 @@ Implement a cross-platform GStreamer plug-in for libprojectM
   - Provided a semi-working example of a GStreamer plugin utilizing the ProjectM library
   - I built off this knowledge and thank you for your contribution
 - [Discord: CodAv](https://github.com/kblaschke)
-  - Helped with basic knowledge of C#
-  - Tested and helped with OSX issues
+  - Helped with knowledge of C#
+  - Helped trace OSX issues to GStreamer source

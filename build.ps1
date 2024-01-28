@@ -22,7 +22,7 @@ function Invoke-PromptCleanBuild {
         }
     
         if ($Clean -ne "N" -and $Clean -ne "n") {
-            # Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
             Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$Dist"
         }
     }
