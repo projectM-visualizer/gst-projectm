@@ -27,6 +27,14 @@ jobs:
           brew update
           brew install ninja sdl2
 
+      - name: Cache Brew
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/homebrew
+            /usr/local
+          key: brew-${{ runner.os }}-projectm-${{ hashFiles('**/Brewfile.lock.json') }}
+
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON
 
@@ -34,7 +42,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ${{ github.workspace }}/cmake-build/CMakeFiles
+            ${{ github.workspace }}/cmake-build
           key: cmake-${{ runner.os }}-${{ hashFiles('**/CMakeCache.txt') }}
 
       - name: Build Release
@@ -51,7 +59,7 @@ jobs:
             path: install/*
 
   build-plugin:
-    name: Build GST ProjectM Plugin
+    name: Build GST Plugin ProjectM
     runs-on: macos-latest
 
     steps:
@@ -75,11 +83,15 @@ jobs:
       - name: Install Packages
         run: |
           ./setup.sh --auto
-
-      # - name: Debugging
-      #   run: |
-      #     ls -R /usr/local/Cellar/gstreamer/1.22.8_2
         
+      - name: Cache Brew
+        uses: actions/cache@v4
+        with:
+          path: |
+            /opt/homebrew
+            /usr/local
+          key: brew-${{ runner.os }}-gst-plugin-projectm-${{ hashFiles('**/Brewfile.lock.json') }}
+
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"
 
@@ -87,7 +99,7 @@ jobs:
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
             name: gst-projectm-osx-latest
-            path: ${{ github.workspace }}/cmake-build/libgstprojectm.so
+            path: ${{ github.workspace }}/cmake-build/libgstprojectm.dylib

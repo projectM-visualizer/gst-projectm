@@ -15,12 +15,22 @@ jobs:
   build-projectm:
     name: Build ProjectM
     runs-on: windows-latest
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
     
     steps:
       - uses: actions/checkout@v4
         with:
           repository: 'projectM-visualizer/projectm'
           submodules: 'recursive'
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
       - name: Configure Build
         run: cmake -G "Visual Studio 17 2022" -A "X64" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON
@@ -29,7 +39,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ${{ github.workspace }}/cmake-build/CMakeFiles
+            ${{ github.workspace }}/cmake-build
           key: cmake-${{ runner.os }}-${{ hashFiles('**/CMakeCache.txt') }}
 
       - name: Build Release
@@ -46,7 +56,7 @@ jobs:
             path: install/*
 
   build-plugin:
-    name: Build GST ProjectM Plugin
+    name: Build GST Plugin ProjectM
     runs-on: windows-latest
 
     env:
@@ -83,11 +93,8 @@ jobs:
       - name: Build Release
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
 
-      - name: List Files
-        run: ls -R
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
             name: gst-projectm-windows-latest
-            path: ${{ github.workspace }}/cmake-build/libgstprojectm.dll
+            path: ${{ github.workspace }}\cmake-build\Release\*.dll
