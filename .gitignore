@@ -3,4 +3,5 @@
 !.vscode/c_cpp_properties.json
 build
 dist
+docs/TODO.md
 test/output
