@@ -17,41 +17,44 @@ jobs:
     runs-on: macos-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout ProjectM
+        uses: actions/checkout@v4
         with:
           repository: 'projectM-visualizer/projectm'
           submodules: 'recursive'
+          fetch-depth: 0
+
+      - name: Get ProjectM Git Hash
+        id: git-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        
+      - name: Cache Install
+        id: cache-install
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/install
+          key: install-${{ runner.os }}-projectm-${{ steps.git-hash.outputs.hash }}
 
       - name: Install Packages
         run: |
           brew update
-          brew install ninja sdl2
-
-      - name: Cache Brew
-        uses: actions/cache@v4
-        with:
-          path: |
-            /opt/homebrew
-            /usr/local
-          key: brew-${{ runner.os }}-projectm-${{ hashFiles('**/Brewfile.lock.json') }}
+          brew install ninja sdl2    
+        if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON
-
-      - name: Cache Build
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.workspace }}/cmake-build
-          key: cmake-${{ runner.os }}-${{ hashFiles('**/CMakeCache.txt') }}
-
+        if: steps.cache-install.outputs.cache-hit != 'true'
+      
       - name: Build Release
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
+        if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Install
         run: |
           cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --target install
-          
+        if: steps.cache-install.outputs.cache-hit != 'true'
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -84,14 +87,6 @@ jobs:
         run: |
           ./setup.sh --auto
         
-      - name: Cache Brew
-        uses: actions/cache@v4
-        with:
-          path: |
-            /opt/homebrew
-            /usr/local
-          key: brew-${{ runner.os }}-gst-plugin-projectm-${{ hashFiles('**/Brewfile.lock.json') }}
-
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"
 

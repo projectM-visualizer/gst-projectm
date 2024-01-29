@@ -17,33 +17,42 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout ProjectM
+        uses: actions/checkout@v4
         with:
           repository: 'projectM-visualizer/projectm'
           submodules: 'recursive'
 
-      - name: Cache CMake Build and Dependencies
+      - name: Get ProjectM Git Hash
+        id: git-hash
+        run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Cache Install
+        id: cache-install
         uses: actions/cache@v4
         with:
           path: |
-            ${{ github.workspace }}/cmake-build
-            /var/cache/apt/archives
-          key: cmake-${{ runner.os }}-projectm-${{ hashFiles('**/CMakeCache.txt', '**/CMakeLists.txt', '**/*.cmake', '**/*.h', '**/*.cpp', '/var/lib/dpkg/status') }}
+            ${{ github.workspace }}/install
+          key: install-${{ runner.os }}-projectm-${{ steps.git-hash.outputs.hash }}
 
       - name: Install Packages
         run: |
           sudo apt-get update
           sudo apt-get install -y libgl1-mesa-dev mesa-common-dev libsdl2-dev libglm-dev llvm-dev libgtest-dev ninja-build
+        if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON
+        if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Build Release
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
+        if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Install
         run: |
           cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --target install
+        if: steps.cache-install.outputs.cache-hit != 'true'
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
