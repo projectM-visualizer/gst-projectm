@@ -52,9 +52,9 @@ source ~/.bash_profile
 4. Run build script
 
 ```bash
-.\build.sh
+./build.sh
 
-.\build.sh --auto # Skips prompts by using default options
+./build.sh --auto # Skips prompts by using default options
 ```
 
 ### Installing
