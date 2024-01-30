@@ -22,7 +22,7 @@ Implement a cross-platform GStreamer plug-in for libprojectM
   - [x] Windows
 - Working with GStreamer
   - [x] Linux
-  - [ ] OSX
+  - [x] OSX
   - [ ] Windows (see issues)
 - [x] Accepting an audio/x-raw stream (coded to add more formats later, if needed)
 - [x] Generating a video/x-raw stream (coded to add more formats later, if needed)
@@ -43,15 +43,15 @@ Implement a cross-platform GStreamer plug-in for libprojectM
 
 ## Issues
 
-- **ALL** - GL issue.
+- **ALL** - GL issue. `gst_gl_context_activate(context, true) fails`
 - **Windows**:  ***BROKEN*** - After days of testing, I've yet to find a solution to GStreamers linking problem when using plugins.
   - Wont run with inspect/launch. DLL dependency issue
 
 ## Contributions
 
-- [Discord: tristancmoi](https://github.com/hashFactory)
-  - Provided a semi-working example of a GStreamer plugin utilizing the ProjectM library
-  - I built off this knowledge and thank you for your contribution
-- [Discord: CodAv](https://github.com/kblaschke)
-  - Helped with knowledge of C#
-  - Helped trace OSX issues to GStreamer source
+- [Discord: tristancmoi](https://github.com/hashFactory) [**AWARD: 20%**]
+  - Provided a semi-working example of a GStreamer plugin utilizing the ProjectM library, on Linux
+- [Discord: CodAv](https://github.com/kblaschke) [**AWARD: 20%**]
+  - Provided knowledge of C#, and GL
+  - Traced OSX issues
+  - Traced GL issues

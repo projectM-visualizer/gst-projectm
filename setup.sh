@@ -95,7 +95,7 @@ prompt_install_dependencies() {
         # Install packages based on the selected package manager
         case $SELECTED_PACKAGE_MANAGER in
             apt)
-                PACKAGE_LIST=("git" "cmake" "ninja-build" "pkg-config" "build-essential" "libgl1-mesa-dev" "mesa-common-dev" "libgstreamer1.0-dev" "libgstreamer-gl1.0-0" "libgstreamer-plugins-base1.0-dev" "gstreamer1.0-libav" "libunwind-dev")
+                PACKAGE_LIST=("git" "cmake" "ninja-build" "pkg-config" "build-essential" "libgl1-mesa-dev" "mesa-common-dev" "libgstreamer1.0-dev" "libgstreamer-gl1.0-0" "libgstreamer-plugins-base1.0-dev" "gstreamer1.0-tools" "gstreamer1.0-libav" "libunwind-dev")
                 install_packages $AUTO "$SELECTED_PACKAGE_MANAGER" PACKAGE_LIST[@]
             ;;
             pacman)

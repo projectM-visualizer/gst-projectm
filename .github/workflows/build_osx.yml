@@ -73,7 +73,7 @@ jobs:
       - name: Wait for ProjectM
         uses: yogeshlonkar/wait-for-jobs@v0
         with:
-          interval: '15000'
+          interval: '5000'
           jobs: Build ProjectM
           ttl: '15'
 
@@ -91,7 +91,13 @@ jobs:
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"
 
       - name: Build Release
+        id: build
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
+
+      - name: Test
+        run: |
+          GST_PLUGIN_PATH="${{ github.workspace }}/cmake-build" gst-inspect-1.0 projectm
+        if: steps.build.outputs.return-code == 0
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
