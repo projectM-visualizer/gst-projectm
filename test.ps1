@@ -23,6 +23,11 @@ param (
 )
 
 switch ($arg) {
+    "--details" {
+        & gst-inspect-1.0 --plugin projectm
+        break
+    }
+
     "--inspect" {
         & gst-inspect-1.0 projectm
         break
@@ -86,7 +91,7 @@ switch ($arg) {
     }
 
     default {
-        Write-Host "Usage: $scriptName [--inspect|--audio|--preset|--properties|--output-video|--encode-output-video]"
+        Write-Host "Usage: $scriptName [--details|--inspect|--audio|--preset|--properties|--output-video|--encode-output-video]"
         exit 1
     }
 }

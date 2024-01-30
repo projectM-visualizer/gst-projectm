@@ -25,6 +25,10 @@ echo
 echo
 
 case "$1" in
+    "--details")
+        gst-inspect-1.0 --plugin projectm
+        ;;
+    
     "--inspect")
         gst-inspect-1.0 projectm
         ;;
@@ -77,7 +81,7 @@ case "$1" in
         ;;
 
     *)
-        echo "Usage: $0 [--auto] --inspect|--test-audio|--test-video|--encode-video"
+        echo "Usage: $0 [--details|--inspect|--audio|--preset|--properties|--output-video|--encode-output-video]"
         exit 1
         ;;
 esac
