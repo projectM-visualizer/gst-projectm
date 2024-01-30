@@ -10,7 +10,7 @@
 
 ### Building
 
-1. Clone the repository
+1. Download (or clone, if git installed) the repository
 
 ```bash
 git clone https://github.com/anomievision/gst-plugin-projectm.git
@@ -22,10 +22,6 @@ git clone https://github.com/anomievision/gst-plugin-projectm.git
 ./setup.sh
 # OR
 ./setup.sh --auto # Skips prompts by using default options
-
-# Fixes
-# - Fix missing "#include <gst/gl/gstglconfig.h>"
-./setup.sh --fixes
 ```
 
 1. Set Environment Variables

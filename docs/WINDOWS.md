@@ -11,7 +11,7 @@
 
 ### Building
 
-1. Clone the repository
+1. Download (or clone, if git installed) the repository
 
 ```
 git clone https://github.com/anomievision/gst-plugin-projectm.git
@@ -67,4 +67,15 @@ To utilize the plugin with the example, please install GStreamer
 
 ```powershell
 gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+```
+
+### Testing
+
+```powershell
+./test.ps1 --inspect # Inspect the plugin
+./test.ps1 --audio # Test the plugin with audio
+./test.ps1 --preset # Test the plugin with a preset
+./test.ps1 --properties # Test the plugin with properties
+./test.ps1 --output-video # Test the plugin with video output (video only)
+./test.ps1 --encode-output-video # Test the plugin with encoded video output (audio/video)
 ```
