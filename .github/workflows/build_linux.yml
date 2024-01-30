@@ -53,6 +53,11 @@ jobs:
         run: |
           cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --target install
         if: steps.cache-install.outputs.cache-hit != 'true'
+
+      - name: Test
+        run: |
+          export GST_PLUGIN_PATH="${{ github.workspace }}/install"
+          gst-inspect-1.0 --plugin projectm
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
