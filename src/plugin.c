@@ -436,75 +436,80 @@ static gboolean projectm_setup(GstAudioVisualizer *bscope)
   // Cast the audio visualizer to the ProjectM plugin
   GstProjectM *plugin = GST_PROJECTM(bscope);
 
-  // Calculate depth based on pixel stride and bits
-  gint depth = bscope->vinfo.finfo->pixel_stride[0] * ((bscope->vinfo.finfo->bits >= 8) ? 8 : 1);
-
-  // Initialize the ProjectM instance
-  projectm_init_instance(plugin);
-
-  // Load preset file if path is provided
-  if (plugin->preset_path != NULL)
-    projectm_load_preset_file(plugin->handle, plugin->preset_path, false);
-
-  // Set texture search paths if directory path is provided
-  if (plugin->texture_dir_path != NULL)
+  // Check if the plugin has already been initialized
+  if (!plugin->handle)
   {
-    gchar *texturePaths[1] = {plugin->texture_dir_path};
-    projectm_set_texture_search_paths(plugin->handle, texturePaths, 1);
+    // Calculate depth based on pixel stride and bits
+    gint depth = bscope->vinfo.finfo->pixel_stride[0] * ((bscope->vinfo.finfo->bits >= 8) ? 8 : 1);
+
+    // Initialize the ProjectM instance
+
+    projectm_init_instance(plugin);
+
+    // Load preset file if path is provided
+    if (plugin->preset_path != NULL)
+      projectm_load_preset_file(plugin->handle, plugin->preset_path, false);
+
+    // Set texture search paths if directory path is provided
+    if (plugin->texture_dir_path != NULL)
+    {
+      const gchar *texturePaths[1] = {plugin->texture_dir_path};
+      projectm_set_texture_search_paths(plugin->handle, texturePaths, 1);
+    }
+
+    // Calculate required samples per frame
+    bscope->req_spf = (bscope->ainfo.channels * bscope->ainfo.rate * 2) / bscope->vinfo.fps_n;
+
+    // Log audio info description
+    GST_LOG_OBJECT(plugin, "%s", bscope->ainfo.finfo->description);
+
+    // Log All Setttings
+    g_print("\npreset: %s", plugin->preset_path);
+    g_print("\ntexture-dir: %s", plugin->texture_dir_path);
+    g_print("\nbeat-sensitivity: %f", plugin->beat_sensitivity);
+    g_print("\nhard-cut-duration: %f", plugin->hard_cut_duration);
+    g_print("\nhard-cut-enabled: %d", plugin->hard_cut_enabled);
+    g_print("\nhard-cut-sensitivity: %f", plugin->hard_cut_sensitivity);
+    g_print("\nsoft-cut-duration: %f", plugin->soft_cut_duration);
+    g_print("\npreset-duration: %f", plugin->preset_duration);
+    g_print("\nmesh-size: %d,%d", plugin->mesh_width, plugin->mesh_height);
+    g_print("\naspect-correction: %d", plugin->aspect_correction);
+    g_print("\neaster-egg: %f", plugin->easter_egg);
+    g_print("\npreset-locked: %d\n\n", plugin->preset_locked);
+
+    // Set various ProjectM parameters
+    projectm_set_fps(plugin->handle, bscope->vinfo.fps_n);
+    projectm_set_window_size(plugin->handle, GST_VIDEO_INFO_WIDTH(&bscope->vinfo), GST_VIDEO_INFO_HEIGHT(&bscope->vinfo));
+    projectm_set_beat_sensitivity(plugin->handle, plugin->beat_sensitivity);
+    projectm_set_hard_cut_duration(plugin->handle, plugin->hard_cut_duration);
+    projectm_set_hard_cut_enabled(plugin->handle, plugin->hard_cut_enabled);
+    projectm_set_hard_cut_sensitivity(plugin->handle, plugin->hard_cut_sensitivity);
+    projectm_set_soft_cut_duration(plugin->handle, plugin->soft_cut_duration);
+
+    if (plugin->preset_duration >= 0.0)
+    {
+      projectm_set_preset_duration(plugin->handle, plugin->preset_duration);
+    }
+    else
+    {
+      projectm_set_preset_duration(plugin->handle, 999999.0);
+    }
+
+    projectm_set_mesh_size(plugin->handle, plugin->mesh_width, plugin->mesh_height);
+    projectm_set_aspect_correction(plugin->handle, plugin->aspect_correction);
+    projectm_set_easter_egg(plugin->handle, plugin->easter_egg);
+    projectm_set_preset_locked(plugin->handle, plugin->preset_locked);
+
+    // Allocate memory for the framebuffer
+    plugin->framebuffer = (uint8_t *)malloc(GST_VIDEO_INFO_WIDTH(&bscope->vinfo) * GST_VIDEO_INFO_HEIGHT(&bscope->vinfo) * 4);
+
+    // Log video information
+    GST_DEBUG_OBJECT(plugin, "WxH: %dx%d, depth: %d, fps: %d/%d",
+                     GST_VIDEO_INFO_WIDTH(&bscope->vinfo),
+                     GST_VIDEO_INFO_HEIGHT(&bscope->vinfo), depth,
+                     bscope->vinfo.fps_n, bscope->vinfo.fps_d);
   }
-
-  // Calculate required samples per frame
-  bscope->req_spf = (bscope->ainfo.channels * bscope->ainfo.rate * 2) / bscope->vinfo.fps_n;
-
-  // Log audio info description
-  GST_LOG_OBJECT(plugin, "%s", bscope->ainfo.finfo->description);
-
-  // Log All Setttings
-  g_print("\npreset: %s", plugin->preset_path);
-  g_print("\ntexture-dir: %s", plugin->texture_dir_path);
-  g_print("\nbeat-sensitivity: %f", plugin->beat_sensitivity);
-  g_print("\nhard-cut-duration: %f", plugin->hard_cut_duration);
-  g_print("\nhard-cut-enabled: %d", plugin->hard_cut_enabled);
-  g_print("\nhard-cut-sensitivity: %f", plugin->hard_cut_sensitivity);
-  g_print("\nsoft-cut-duration: %f", plugin->soft_cut_duration);
-  g_print("\npreset-duration: %f", plugin->preset_duration);
-  g_print("\nmesh-size: %d,%d", plugin->mesh_width, plugin->mesh_height);
-  g_print("\naspect-correction: %d", plugin->aspect_correction);
-  g_print("\neaster-egg: %f", plugin->easter_egg);
-  g_print("\npreset-locked: %d\n\n", plugin->preset_locked);
-
-  // Set various ProjectM parameters
-  projectm_set_fps(plugin->handle, bscope->vinfo.fps_n);
-  projectm_set_window_size(plugin->handle, GST_VIDEO_INFO_WIDTH(&bscope->vinfo), GST_VIDEO_INFO_HEIGHT(&bscope->vinfo));
-  projectm_set_beat_sensitivity(plugin->handle, plugin->beat_sensitivity);
-  projectm_set_hard_cut_duration(plugin->handle, plugin->hard_cut_duration);
-  projectm_set_hard_cut_enabled(plugin->handle, plugin->hard_cut_enabled);
-  projectm_set_hard_cut_sensitivity(plugin->handle, plugin->hard_cut_sensitivity);
-  projectm_set_soft_cut_duration(plugin->handle, plugin->soft_cut_duration);
-
-  if (plugin->preset_duration >= 0.0)
-  {
-    projectm_set_preset_duration(plugin->handle, plugin->preset_duration);
-  }
-  else
-  {
-    projectm_set_preset_duration(plugin->handle, 999999.0);
-  }
-
-  projectm_set_mesh_size(plugin->handle, plugin->mesh_width, plugin->mesh_height);
-  projectm_set_aspect_correction(plugin->handle, plugin->aspect_correction);
-  projectm_set_easter_egg(plugin->handle, plugin->easter_egg);
-  projectm_set_preset_locked(plugin->handle, plugin->preset_locked);
-
-  // Allocate memory for the framebuffer
-  plugin->framebuffer = (uint8_t *)malloc(GST_VIDEO_INFO_WIDTH(&bscope->vinfo) * GST_VIDEO_INFO_HEIGHT(&bscope->vinfo) * 4);
-
-  // Log video information
-  GST_DEBUG_OBJECT(plugin, "WxH: %dx%d, depth: %d, fps: %d/%d",
-                   GST_VIDEO_INFO_WIDTH(&bscope->vinfo),
-                   GST_VIDEO_INFO_HEIGHT(&bscope->vinfo), depth,
-                   bscope->vinfo.fps_n, bscope->vinfo.fps_d);
-
+  
   return TRUE;
 }
 
