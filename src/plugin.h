@@ -60,15 +60,13 @@ static void gst_projectm_init(GstProjectM *plugin);
 
 static void gst_projectm_finalize(GObject *object);
 
+static gboolean gst_projectm_setup(GstAudioVisualizer *bscope);
+
+static gboolean gst_projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio, GstVideoFrame *video);
+
 static void gst_projectm_class_init(GstProjectMClass *klass);
 
 static gboolean plugin_init(GstPlugin *plugin);
-
-// static void projectm_init_gl(GstProjectM *plugin);
-
-static gboolean projectm_setup(GstAudioVisualizer *bscope);
-
-static gboolean projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio, GstVideoFrame *video);
 
 G_END_DECLS
 

@@ -200,6 +200,124 @@ static void gst_projectm_finalize(GObject *object)
   G_OBJECT_CLASS(gst_projectm_parent_class)->finalize(object);
 }
 
+static gboolean gst_projectm_setup(GstAudioVisualizer *bscope)
+{
+  // Cast the audio visualizer to the ProjectM plugin
+  GstProjectM *plugin = GST_PROJECTM(bscope);
+
+  // Check if GL context, window, and display exist, and create if not
+  if (!plugin->display || !plugin->context || !plugin->window)
+  {
+    gl_init(plugin);
+  }
+
+  // Check if ProjectM instance exists, and create if not
+  if (!plugin->handle)
+  {
+    // Create ProjectM instance
+    projectm_init(plugin);
+
+    // Calculate depth based on pixel stride and bits
+    gint depth = bscope->vinfo.finfo->pixel_stride[0] * ((bscope->vinfo.finfo->bits >= 8) ? 8 : 1);
+
+    // Calculate required samples per frame
+    bscope->req_spf = (bscope->ainfo.channels * bscope->ainfo.rate * 2) / bscope->vinfo.fps_n;
+
+    // Allocate memory for the framebuffer
+    plugin->framebuffer = (uint8_t *)malloc(GST_VIDEO_INFO_WIDTH(&bscope->vinfo) * GST_VIDEO_INFO_HEIGHT(&bscope->vinfo) * 4);
+
+    if (plugin->framebuffer == NULL)
+    {
+      GST_ERROR_OBJECT(plugin, "Failed to allocate memory for framebuffer");
+      return FALSE;
+    }
+
+    // Log audio info
+    GST_DEBUG_OBJECT(plugin,
+                     "Audio Information <Channels: %d, SampleRate: %d, Description: %s>",
+                     bscope->ainfo.channels, bscope->ainfo.rate, bscope->ainfo.finfo->description);
+
+    // Log video info
+    GST_DEBUG_OBJECT(plugin,
+                     "Video Information <Dimensions: %dx%d, FPS: %d/%d, Depth: %dbit, SamplesPerFrame: %d>",
+                     GST_VIDEO_INFO_WIDTH(&bscope->vinfo),
+                     GST_VIDEO_INFO_HEIGHT(&bscope->vinfo),
+                     bscope->vinfo.fps_n, bscope->vinfo.fps_d,
+                     depth, bscope->req_spf);
+  }
+
+  return TRUE;
+}
+
+static gboolean gst_projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
+                                    GstVideoFrame *video)
+{
+  GstProjectM *plugin = GST_PROJECTM(bscope);
+  GstMapInfo audioMap;
+  gint16 *audioData;
+  gint channels;
+  gboolean result = TRUE;
+  guint32 audioSampleRate;
+  guint numSamples;
+
+  // AUDIO
+  channels = GST_AUDIO_INFO_CHANNELS(&bscope->ainfo);
+  numSamples = audioMap.size / (channels * sizeof(gint16));
+
+  GstMemory *audioMemory = gst_buffer_get_all_memory(audio);
+  GST_DEBUG_OBJECT(plugin, "Audio Memory Size: %lu", audioMemory->size);
+
+  gst_buffer_map(audio, &audioMap, GST_MAP_READ);
+
+  GST_DEBUG_OBJECT(plugin, "Audio Samples: %u, Offset: %lu, Offset End: %lu, Sample Rate: %d, FPS: %d, Required Samples Per Frame: %d",
+                   audioMap.size / 8, audio->offset, audio->offset_end, bscope->ainfo.rate, bscope->vinfo.fps_n, bscope->req_spf);
+
+  projectm_pcm_add_int16(plugin->handle, (gint16 *)audioMap.data, audioMap.size / 4, PROJECTM_STEREO);
+
+  GST_DEBUG_OBJECT(plugin, "Audio Data: %d %d %d %d", ((gint16 *)audioMap.data)[100], ((gint16 *)audioMap.data)[101], ((gint16 *)audioMap.data)[102], ((gint16 *)audioMap.data)[103]);
+
+  // VIDEO
+  gst_video_frame_map(video, &video->info, video->buffer, GST_MAP_READWRITE);
+
+  const GstGLFuncs *glFunctions = plugin->context->gl_vtable;
+
+  size_t windowWidth, windowHeight;
+
+  projectm_get_window_size(plugin->handle, &windowWidth, &windowHeight);
+  glFunctions->Viewport(0, 0, windowWidth, windowHeight);
+
+  projectm_opengl_render_frame(plugin->handle);
+  gl_error_handler(plugin->context, plugin);
+
+  uint8_t *framebufferData = plugin->framebuffer;
+
+  glFunctions->ReadPixels(0, 0, windowWidth, windowHeight, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, framebufferData);
+  GST_DEBUG_OBJECT(plugin, "Framebuffer Data: %d %d %d %d", framebufferData[0], framebufferData[1], framebufferData[2], framebufferData[3]);
+
+  // Swap buffers
+  gst_gl_context_swap_buffers(plugin->context);
+
+  uint8_t *videoData = ((uint8_t *)(video->data[0]));
+
+  // Convert RGBA to BGRA
+  for (int r = 0; r < windowWidth * windowHeight * 4; r += 4)
+  {
+    videoData[r + 3] = framebufferData[r];
+    videoData[r + 2] = framebufferData[r + 2];
+    videoData[r + 1] = framebufferData[r + 1];
+    videoData[r] = framebufferData[r + 3];
+  }
+
+  GST_DEBUG_OBJECT(plugin, "Video Data: %d %d\n", GST_VIDEO_FRAME_N_PLANES(video), ((uint8_t *)(GST_VIDEO_FRAME_PLANE_DATA(video, 0)))[0]);
+
+  GST_DEBUG_OBJECT(plugin, "Rendered one frame");
+
+done:
+  gst_buffer_unmap(audio, &audioMap);
+
+  return result;
+}
+
 static void gst_projectm_class_init(GstProjectMClass *klass)
 {
   GObjectClass *gobject_class = (GObjectClass *)klass;
@@ -299,65 +417,8 @@ static void gst_projectm_class_init(GstProjectMClass *klass)
 
   gobject_class->finalize = gst_projectm_finalize;
 
-  scope_class->setup = GST_DEBUG_FUNCPTR(projectm_setup);
-  scope_class->render = GST_DEBUG_FUNCPTR(projectm_render);
-}
-
-static gboolean projectm_setup(GstAudioVisualizer *bscope)
-{
-  // Cast the audio visualizer to the ProjectM plugin
-  GstProjectM *plugin = GST_PROJECTM(bscope);
-
-  // Check if GL context, window, and display exist, and create if not
-  if (!plugin->display || !plugin->context || !plugin->window)
-  {
-    gl_init(plugin);
-  }
-
-  // Check if ProjectM instance exists, and create if not
-  if (!plugin->handle)
-  {
-    // Create ProjectM instance
-    projectm_init(plugin);
-
-    // Calculate depth based on pixel stride and bits
-    gint depth = bscope->vinfo.finfo->pixel_stride[0] * ((bscope->vinfo.finfo->bits >= 8) ? 8 : 1);
-
-    // Calculate required samples per frame
-    bscope->req_spf = (bscope->ainfo.channels * bscope->ainfo.rate * 2) / bscope->vinfo.fps_n;
-
-    // Allocate memory for the framebuffer
-    plugin->framebuffer = (uint8_t *)malloc(GST_VIDEO_INFO_WIDTH(&bscope->vinfo) * GST_VIDEO_INFO_HEIGHT(&bscope->vinfo) * 4);
-
-    if (plugin->framebuffer == NULL)
-    {
-      GST_ERROR_OBJECT(plugin, "Failed to allocate memory for framebuffer");
-      return FALSE;
-    }
-
-    // Log audio info
-    GST_DEBUG_OBJECT(plugin,
-                     "Audio Information <Channels: %d, SampleRate: %d, Description: %s>",
-                     bscope->ainfo.channels, bscope->ainfo.rate, bscope->ainfo.finfo->description);
-
-    // Log video info
-    GST_DEBUG_OBJECT(plugin,
-                     "Video Information <Dimensions: %dx%d, FPS: %d/%d, Depth: %dbit, SamplesPerFrame: %d>",
-                     GST_VIDEO_INFO_WIDTH(&bscope->vinfo),
-                     GST_VIDEO_INFO_HEIGHT(&bscope->vinfo),
-                     bscope->vinfo.fps_n, bscope->vinfo.fps_d,
-                     depth, bscope->req_spf);
-  }
-
-  return TRUE;
-}
-
-static gboolean projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
-                                GstVideoFrame *video)
-{
-  GstProjectM *plugin = GST_PROJECTM(bscope);
-
-  return true;
+  scope_class->setup = GST_DEBUG_FUNCPTR(gst_projectm_setup);
+  scope_class->render = GST_DEBUG_FUNCPTR(gst_projectm_render);
 }
 
 static gboolean plugin_init(GstPlugin *plugin)

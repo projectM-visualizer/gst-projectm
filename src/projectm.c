@@ -4,6 +4,8 @@
 
 #include <gst/gst.h>
 
+#include <projectM-4/projectM.h>
+
 #include "projectm.h"
 #include "plugin.h"
 
@@ -91,3 +93,12 @@ void projectm_init(GstProjectM *plugin)
     projectm_set_fps(plugin->handle, plugin->fps);
     projectm_set_window_size(plugin->handle, plugin->window_width, plugin->window_height);
 }
+
+// void projectm_render(GstProjectM *plugin, gint16 *samples, gint sample_count)
+// {
+//     GST_DEBUG_OBJECT(plugin, "Rendering %d samples", sample_count);
+
+//     projectm_pcm_add_int16(plugin->handle, samples, sample_count, PROJECTM_STEREO);
+
+//     projectm_opengl_render_frame(plugin->handle);
+// }

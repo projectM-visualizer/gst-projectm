@@ -12,6 +12,11 @@ G_BEGIN_DECLS
  */
 void projectm_init(GstProjectM *plugin);
 
+/**
+ * @brief Render ProjectM
+ */
+// void projectm_render(GstProjectM *plugin, gint16 *samples, gint sample_count);
+
 G_END_DECLS
 
 #endif /* __PROJECTM_H__ */
