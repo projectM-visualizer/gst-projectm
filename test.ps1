@@ -18,11 +18,7 @@ if (!(Test-Path "$Env:GST_PLUGIN_PATH\gstprojectm.dll")) {
 
 Write-Host
 
-param (
-    [string]$arg
-)
-
-switch ($arg) {
+switch ($args) {
     "--details" {
         & gst-inspect-1.0 --plugin projectm
         break

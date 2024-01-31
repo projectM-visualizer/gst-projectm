@@ -22,7 +22,9 @@ function Invoke-PromptCleanBuild {
         }
     
         if ($Clean -ne "N" -and $Clean -ne "n") {
-            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$BUILD"
+            Get-ChildItem -Path $DIST -Exclude 'vcpkg_installed' | ForEach-Object {
+                Remove-Item -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue
+            }
             Remove-Item -Recurse -Force -ErrorAction SilentlyContinue -Path "$Dist"
         }
     }
