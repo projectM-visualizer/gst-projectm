@@ -8,6 +8,9 @@
 
 G_BEGIN_DECLS
 
+/**
+ * @brief Initialize OpenGL
+ */
 void gl_init(GstProjectM *plugin);
 
 G_END_DECLS

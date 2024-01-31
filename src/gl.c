@@ -81,15 +81,4 @@ void gl_init(GstProjectM *plugin)
   plugin->display = display;
   plugin->window = window;
   plugin->context = context;
-
-  // Create ProjectM instance
-  plugin->handle = projectm_create();
-  if (!plugin->handle)
-  {
-    GST_LOG("Could not create instance");
-  }
-  else
-  {
-    GST_LOG("Created instance!");
-  }
 }

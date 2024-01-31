@@ -15,21 +15,23 @@
 #include "debug.h"
 #include "enums.h"
 #include "gl.h"
+#include "projectm.h"
 
 GST_DEBUG_CATEGORY_STATIC(gst_projectm_debug);
 #define GST_CAT_DEFAULT gst_projectm_debug
 
 G_DEFINE_TYPE_WITH_CODE(GstProjectM, gst_projectm, GST_TYPE_AUDIO_VISUALIZER,
                         GST_DEBUG_CATEGORY_INIT(gst_projectm_debug,
-                                                "projectM", 0,
-                                                "projectM visualizer plugin with code"));
+                                                "gstprojectm", 0,
+                                                "Plugin Root"));
 
 void gst_projectm_set_property(GObject *object, guint property_id,
                                const GValue *value, GParamSpec *pspec)
 {
   GstProjectM *plugin = GST_PROJECTM(object);
 
-  GST_DEBUG_OBJECT(plugin, "set_property");
+  const gchar *property_name = g_param_spec_get_name(pspec);
+  GST_DEBUG_OBJECT(plugin, "set-property <%s>", property_name);
 
   switch (property_id)
   {
@@ -96,7 +98,8 @@ void gst_projectm_get_property(GObject *object, guint property_id,
 {
   GstProjectM *plugin = GST_PROJECTM(object);
 
-  GST_DEBUG_OBJECT(plugin, "get_property");
+  const gchar *property_name = g_param_spec_get_name(pspec);
+  GST_DEBUG_OBJECT(plugin, "get-property <%s>", property_name);
 
   switch (property_id)
   {
@@ -184,9 +187,15 @@ static void gst_projectm_finalize(GObject *object)
   GstProjectM *plugin = GST_PROJECTM(object);
 
   if (plugin->framebuffer)
+  {
+    GST_DEBUG_OBJECT(plugin, "Freeing framebuffer");
     free(plugin->framebuffer);
+  }
   if (plugin->handle)
+  {
+    GST_DEBUG_OBJECT(plugin, "Destroying ProjectM instance");
     projectm_destroy(plugin->handle);
+  }
 
   G_OBJECT_CLASS(gst_projectm_parent_class)->finalize(object);
 }
@@ -299,75 +308,17 @@ static gboolean projectm_setup(GstAudioVisualizer *bscope)
   // Cast the audio visualizer to the ProjectM plugin
   GstProjectM *plugin = GST_PROJECTM(bscope);
 
-  // Check if the plugin has already been initialized
+  // Check if GL context, window, and display exist, and create if not
+  if (!plugin->display || !plugin->context || !plugin->window)
+  {
+    gl_init(plugin);
+  }
+
+  // Check if ProjectM instance exists, and create if not
   if (!plugin->handle)
   {
-    // Initialize the ProjectM instance
-    gl_init(plugin);
-
-    // Log properties
-    GST_INFO_OBJECT(plugin, "Using Properties: "
-             "preset=%s, "
-             "texture-dir=%s, "
-             "beat-sensitivity=%f, "
-             "hard-cut-duration=%f, "
-             "hard-cut-enabled=%d, "
-             "hard-cut-sensitivity=%f, "
-             "soft-cut-duration=%f, "
-             "preset-duration=%f, "
-             "mesh-size=(%d, %d)"
-             "aspect-correction=%d, "
-             "easter-egg=%f, "
-             "preset-locked=%d, ",
-             plugin->preset_path,
-             plugin->texture_dir_path,
-             plugin->beat_sensitivity,
-             plugin->hard_cut_duration,
-             plugin->hard_cut_enabled,
-             plugin->hard_cut_sensitivity,
-             plugin->soft_cut_duration,
-             plugin->preset_duration,
-             plugin->mesh_width,
-             plugin->mesh_height,
-             plugin->aspect_correction,
-             plugin->easter_egg,
-             plugin->preset_locked);
-
-    // Load preset file if path is provided
-    if (plugin->preset_path != NULL)
-      projectm_load_preset_file(plugin->handle, plugin->preset_path, false);
-
-    // Set texture search path if directory path is provided
-    if (plugin->texture_dir_path != NULL)
-    {
-      const gchar *texturePaths[1] = {plugin->texture_dir_path};
-      projectm_set_texture_search_paths(plugin->handle, texturePaths, 1);
-    }
-
-    // Set properties
-    projectm_set_beat_sensitivity(plugin->handle, plugin->beat_sensitivity);
-    projectm_set_hard_cut_duration(plugin->handle, plugin->hard_cut_duration);
-    projectm_set_hard_cut_enabled(plugin->handle, plugin->hard_cut_enabled);
-    projectm_set_hard_cut_sensitivity(plugin->handle, plugin->hard_cut_sensitivity);
-    projectm_set_soft_cut_duration(plugin->handle, plugin->soft_cut_duration);
-
-    // Set preset duration, or set to in infinite duration if zero
-    if (plugin->preset_duration > 0.0)
-    {
-      projectm_set_preset_duration(plugin->handle, plugin->preset_duration);
-    }
-    else
-    {
-      projectm_set_preset_duration(plugin->handle, 999999.0);
-    }
-
-    projectm_set_mesh_size(plugin->handle, plugin->mesh_width, plugin->mesh_height);
-    projectm_set_aspect_correction(plugin->handle, plugin->aspect_correction);
-    projectm_set_easter_egg(plugin->handle, plugin->easter_egg);
-    projectm_set_preset_locked(plugin->handle, plugin->preset_locked);
-
-    projectm_set_fps(plugin->handle, bscope->vinfo.fps_n);
-    projectm_set_window_size(plugin->handle, GST_VIDEO_INFO_WIDTH(&bscope->vinfo), GST_VIDEO_INFO_HEIGHT(&bscope->vinfo));
+    // Create ProjectM instance
+    projectm_init(plugin);
 
     // Calculate depth based on pixel stride and bits
     gint depth = bscope->vinfo.finfo->pixel_stride[0] * ((bscope->vinfo.finfo->bits >= 8) ? 8 : 1);
@@ -378,14 +329,24 @@ static gboolean projectm_setup(GstAudioVisualizer *bscope)
     // Allocate memory for the framebuffer
     plugin->framebuffer = (uint8_t *)malloc(GST_VIDEO_INFO_WIDTH(&bscope->vinfo) * GST_VIDEO_INFO_HEIGHT(&bscope->vinfo) * 4);
 
-    // Log audio info description
-    GST_DEBUG_OBJECT(plugin, "Description: %s", bscope->ainfo.finfo->description);
+    if (plugin->framebuffer == NULL)
+    {
+      GST_ERROR_OBJECT(plugin, "Failed to allocate memory for framebuffer");
+      return FALSE;
+    }
 
-    // Log video information
-    GST_DEBUG_OBJECT(plugin, "Video Dimensions: %dx%d, Depth: %d, FPS: %d/%d",
+    // Log audio info
+    GST_DEBUG_OBJECT(plugin,
+                     "Audio Information <Channels: %d, SampleRate: %d, Description: %s>",
+                     bscope->ainfo.channels, bscope->ainfo.rate, bscope->ainfo.finfo->description);
+
+    // Log video info
+    GST_DEBUG_OBJECT(plugin,
+                     "Video Information <Dimensions: %dx%d, FPS: %d/%d, Depth: %dbit, SamplesPerFrame: %d>",
                      GST_VIDEO_INFO_WIDTH(&bscope->vinfo),
-                     GST_VIDEO_INFO_HEIGHT(&bscope->vinfo), depth,
-                     bscope->vinfo.fps_n, bscope->vinfo.fps_d);
+                     GST_VIDEO_INFO_HEIGHT(&bscope->vinfo),
+                     bscope->vinfo.fps_n, bscope->vinfo.fps_d,
+                     depth, bscope->req_spf);
   }
 
   return TRUE;

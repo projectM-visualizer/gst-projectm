@@ -34,7 +34,7 @@ case "$1" in
         ;;
 
     "--audio")
-        GST_DEBUG=3 gst-launch-1.0 -v \
+        GST_DEBUG=projectm:5 gst-launch-1.0 -v \
             audiotestsrc ! queue ! audioconvert ! \
             projectm \
             ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false

@@ -24,6 +24,8 @@ add_library(gstprojectm SHARED
     src/gl.c
     src/plugin.h
     src/plugin.c
+    src/projectm.h
+    src/projectm.c
 )
 
 target_include_directories(gstprojectm
