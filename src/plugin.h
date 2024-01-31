@@ -49,10 +49,6 @@ struct _GstProjectMClass
   GstAudioVisualizerClass parent_class;
 };
 
-const gchar *get_audio_sink_cap(unsigned int type);
-
-const gchar *get_video_src_cap(unsigned int type);
-
 static void gl_error_handler(GstGLContext *context, gpointer data);
 
 static void gst_projectm_log_handler (const char *message, const char *funcname, void *priv);

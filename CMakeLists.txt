@@ -14,6 +14,9 @@ find_package(GStreamer REQUIRED COMPONENTS gstreamer-audio gstreamer-gl gstreame
 find_package(GLIB2 REQUIRED)
 
 add_library(gstprojectm SHARED
+    src/caps.h
+    src/caps.c
+    src/config.h
     src/enums.h
     src/plugin.h
     src/plugin.c

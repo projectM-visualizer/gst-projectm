@@ -5,9 +5,10 @@
 
 G_BEGIN_DECLS
 
-/*
- * Properties
+/**
+ * @brief Properties
  */
+
 enum { 
     PROP_0, 
     PROP_PRESET_PATH,

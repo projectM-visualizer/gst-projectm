@@ -10,6 +10,8 @@
 #include <projectM-4/projectM.h>
 
 #include "plugin.h"
+#include "caps.h"
+#include "config.h"
 #include "enums.h"
 
 GST_DEBUG_CATEGORY_STATIC(gst_projectm_debug);
@@ -19,65 +21,6 @@ G_DEFINE_TYPE_WITH_CODE(GstProjectM, gst_projectm, GST_TYPE_AUDIO_VISUALIZER,
                         GST_DEBUG_CATEGORY_INIT(gst_projectm_debug,
                                                 "projectM", 0,
                                                 "projectM visualizer plugin with code"));
-
-#if G_BYTE_ORDER == G_BIG_ENDIAN
-#define RGB_ORDER_CAPS "xRGB, RGB"
-#else
-#define RGB_ORDER_CAPS "BGRx, BGR"
-#endif
-
-#define DEFAULT_PRESET_PATH NULL
-#define DEFAULT_TEXTURE_DIR_PATH NULL
-#define DEFAULT_BEAT_SENSITIVITY 1.0
-#define DEFAULT_HARD_CUT_DURATION 3.0
-#define DEFAULT_HARD_CUT_ENABLED FALSE
-#define DEFAULT_HARD_CUT_SENSITIVITY 1.0
-#define DEFAULT_SOFT_CUT_DURATION 3.0
-#define DEFAULT_PRESET_DURATION 0.0
-#define DEFAULT_MESH_SIZE "48,32"
-#define DEFAULT_ASPECT_CORRECTION TRUE
-#define DEFAULT_EASTER_EGG 0.0
-#define DEFAULT_PRESET_LOCKED TRUE
-
-const gchar *get_audio_sink_cap(unsigned int type)
-{
-  const char *format;
-
-  switch (type)
-  {
-  case 0:
-    format = GST_AUDIO_CAPS_MAKE("audio/x-raw, "
-                                 "format = (string) " GST_AUDIO_NE(
-                                     S16) ", "
-                                          "layout = (string) interleaved, "
-                                          "channels = (int) { 2 }, "
-                                          "rate = (int) { 44100 }, "
-                                          "channel-mask = (bitmask) { 0x0003 }");
-    break;
-  default:
-    format = NULL;
-    break;
-  }
-
-  return format;
-}
-
-const gchar *get_video_src_cap(unsigned int type)
-{
-  const char *format;
-
-  switch (type)
-  {
-  case 0:
-    format = GST_VIDEO_CAPS_MAKE("video/x-raw, format = (string) { RGBA, BGRA }, framerate=(fraction)[0/1,MAX]");
-    break;
-  default:
-    format = NULL;
-    break;
-  }
-
-  return format;
-}
 
 static void gl_error_handler(GstGLContext *context, gpointer data)
 {
@@ -386,7 +329,7 @@ static void projectm_init_instance(GstProjectM *plugin)
   GST_LOG_OBJECT(plugin, "fps: %d", plugin->fps);
 
   // Create GL context and window
-  gst_gl_context_create(context, 0, &error);
+  gst_gl_context_create(context, NULL, &error);
   window = gst_gl_context_get_window(context);
 
   // Get GL version
@@ -399,10 +342,28 @@ static void projectm_init_instance(GstProjectM *plugin)
   gst_gl_window_resize(window, plugin->window_width, plugin->window_height);
 
   // Activate GL context
-  gst_gl_context_activate(context, true);
+  gboolean is_context_active = gst_gl_context_activate(context, true);
+
+  // Check if GL context is active
+  if (!is_context_active)
+  {
+    GST_ERROR_OBJECT(plugin, "Failed to create GL context");
+    gl_error_handler(context, plugin);
+    return;
+  }
 
   // Create GL framebuffer
   GstGLFramebuffer *fbo = gst_gl_framebuffer_new(context);
+
+  // Check if framebuffer was created
+  // gboolean is_fbo_active = gst_gl_context_check_framebuffer_status(context, gst_gl_framebuffer_get_id(fbo));
+  
+  // if (!is_fbo_active)
+  // {
+  //   GST_ERROR_OBJECT(plugin, "Failed to create GL framebuffer");
+  //   gl_error_handler(context, plugin);
+  //   return;
+  // }
 
   // Initialize GL memory
   gst_gl_memory_init_once();
@@ -463,7 +424,7 @@ static gboolean projectm_setup(GstAudioVisualizer *bscope)
     // Log audio info description
     GST_LOG_OBJECT(plugin, "%s", bscope->ainfo.finfo->description);
 
-    // Log All Setttings
+    // Log All Settings
     g_print("\npreset: %s", plugin->preset_path);
     g_print("\ntexture-dir: %s", plugin->texture_dir_path);
     g_print("\nbeat-sensitivity: %f", plugin->beat_sensitivity);
@@ -562,14 +523,14 @@ static gboolean projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
 
   uint8_t *vdata = ((uint8_t *)(video->data[0]));
 
-  /*// RGBA
-  for (int r = 0; r < width*height*4; r+=4) {
-    vdata[r+3] = data[r];
-    //vdata[r+1] = data[r+1];
-    //vdata[r+2] = data[r+2];
-    vdata[r] = data[r+3];
-  }
-  */
+  // RGBA
+  // for (int r = 0; r < width*height*4; r+=4) {
+  //   vdata[r+3] = data[r];
+  //   //vdata[r+1] = data[r+1];
+  //   //vdata[r+2] = data[r+2];
+  //   vdata[r] = data[r+3];
+  // }
+  
   // BGRA
   for (int r = 0; r < width * height * 4; r += 4)
   {
@@ -595,22 +556,6 @@ static gboolean plugin_init(GstPlugin *plugin)
 
   return gst_element_register(plugin, "projectm", GST_RANK_NONE, GST_TYPE_PROJECTM);
 }
-
-#ifndef PACKAGE
-#define PACKAGE "GstProjectM"
-#endif
-#ifndef PACKAGE_NAME
-#define PACKAGE_NAME "GstProjectM"
-#endif
-#ifndef PACKAGE_VERSION
-#define PACKAGE_VERSION "0.0.1"
-#endif
-#ifndef PACKAGE_LICENSE
-#define PACKAGE_LICENSE "LGPL"
-#endif
-#ifndef PACKAGE_ORIGIN
-#define PACKAGE_ORIGIN "https://github.com/anomievision/gst-plugin-projectm"
-#endif
 
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR, projectm,
                   "plugin to visualize audio using the ProjectM library", plugin_init,
