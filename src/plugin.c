@@ -265,16 +265,16 @@ static gboolean gst_projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio
   numSamples = audioMap.size / (channels * sizeof(gint16));
 
   GstMemory *audioMemory = gst_buffer_get_all_memory(audio);
-  GST_DEBUG_OBJECT(plugin, "Audio Memory Size: %lu", audioMemory->size);
+  // GST_DEBUG_OBJECT(plugin, "Audio Memory Size: %lu", audioMemory->size);
 
   gst_buffer_map(audio, &audioMap, GST_MAP_READ);
 
-  GST_DEBUG_OBJECT(plugin, "Audio Samples: %u, Offset: %lu, Offset End: %lu, Sample Rate: %d, FPS: %d, Required Samples Per Frame: %d",
-                   audioMap.size / 8, audio->offset, audio->offset_end, bscope->ainfo.rate, bscope->vinfo.fps_n, bscope->req_spf);
+  // GST_DEBUG_OBJECT(plugin, "Audio Samples: %u, Offset: %lu, Offset End: %lu, Sample Rate: %d, FPS: %d, Required Samples Per Frame: %d",
+  //                  audioMap.size / 8, audio->offset, audio->offset_end, bscope->ainfo.rate, bscope->vinfo.fps_n, bscope->req_spf);
 
   projectm_pcm_add_int16(plugin->handle, (gint16 *)audioMap.data, audioMap.size / 4, PROJECTM_STEREO);
 
-  GST_DEBUG_OBJECT(plugin, "Audio Data: %d %d %d %d", ((gint16 *)audioMap.data)[100], ((gint16 *)audioMap.data)[101], ((gint16 *)audioMap.data)[102], ((gint16 *)audioMap.data)[103]);
+  // GST_DEBUG_OBJECT(plugin, "Audio Data: %d %d %d %d", ((gint16 *)audioMap.data)[100], ((gint16 *)audioMap.data)[101], ((gint16 *)audioMap.data)[102], ((gint16 *)audioMap.data)[103]);
 
   // VIDEO
   gst_video_frame_map(video, &video->info, video->buffer, GST_MAP_READWRITE);
@@ -292,7 +292,7 @@ static gboolean gst_projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio
   uint8_t *framebufferData = plugin->framebuffer;
 
   glFunctions->ReadPixels(0, 0, windowWidth, windowHeight, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, framebufferData);
-  GST_DEBUG_OBJECT(plugin, "Framebuffer Data: %d %d %d %d", framebufferData[0], framebufferData[1], framebufferData[2], framebufferData[3]);
+  // GST_DEBUG_OBJECT(plugin, "Framebuffer Data: %d %d %d %d", framebufferData[0], framebufferData[1], framebufferData[2], framebufferData[3]);
 
   // Swap buffers
   gst_gl_context_swap_buffers(plugin->context);
@@ -308,9 +308,9 @@ static gboolean gst_projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio
     videoData[r] = framebufferData[r + 3];
   }
 
-  GST_DEBUG_OBJECT(plugin, "Video Data: %d %d\n", GST_VIDEO_FRAME_N_PLANES(video), ((uint8_t *)(GST_VIDEO_FRAME_PLANE_DATA(video, 0)))[0]);
+  // GST_DEBUG_OBJECT(plugin, "Video Data: %d %d\n", GST_VIDEO_FRAME_N_PLANES(video), ((uint8_t *)(GST_VIDEO_FRAME_PLANE_DATA(video, 0)))[0]);
 
-  GST_DEBUG_OBJECT(plugin, "Rendered one frame");
+  // GST_DEBUG_OBJECT(plugin, "Rendered one frame");
 
 done:
   gst_buffer_unmap(audio, &audioMap);
