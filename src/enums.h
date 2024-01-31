@@ -9,8 +9,9 @@ G_BEGIN_DECLS
  * @brief Properties
  */
 
-enum { 
-    PROP_0, 
+enum
+{
+    PROP_0,
     PROP_PRESET_PATH,
     PROP_TEXTURE_DIR_PATH,
     PROP_BEAT_SENSITIVITY,

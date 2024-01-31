@@ -129,7 +129,7 @@ void gst_projectm_get_property(GObject *object, guint property_id,
     break;
   case PROP_MESH_SIZE:
   {
-    gchar *meshSizeStr = g_strdup_printf("%d,%d", plugin->mesh_width, plugin->mesh_height);
+    gchar *meshSizeStr = g_strdup_printf("%lu,%lu", plugin->mesh_width, plugin->mesh_height);
     g_value_set_string(value, meshSizeStr);
     g_free(meshSizeStr);
     break;
@@ -249,6 +249,7 @@ static gboolean gst_projectm_setup(GstAudioVisualizer *bscope)
   return TRUE;
 }
 
+// TODO: CLEANUP & ADD DEBUGGING
 static gboolean gst_projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
                                     GstVideoFrame *video)
 {

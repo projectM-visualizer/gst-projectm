@@ -6,6 +6,7 @@
 #include <gst/gl/gstglfuncs.h>
 
 #include "gl.h"
+#include "debug.h"
 #include "plugin.h"
 
 GST_DEBUG_CATEGORY_STATIC(gstprojectm_gl_debug);
@@ -14,7 +15,7 @@ GST_DEBUG_CATEGORY_STATIC(gstprojectm_gl_debug);
 void gl_init(GstProjectM *plugin)
 {
   GST_DEBUG_CATEGORY_INIT(gstprojectm_gl_debug, "projectm",
-                            0, "OpenGL");
+                          0, "OpenGL");
 
   // Error object
   GError *error = NULL;
@@ -36,7 +37,7 @@ void gl_init(GstProjectM *plugin)
 
   // Create GL context
   GstGLContext *context = gst_gl_context_new(display);
-  gboolean created_context = gst_gl_context_create(context, NULL, &error);  
+  gboolean created_context = gst_gl_context_create(context, NULL, &error);
 
   // Check if context was created
   if (!created_context)
@@ -68,9 +69,10 @@ void gl_init(GstProjectM *plugin)
   {
     GST_ERROR_OBJECT(plugin, "OpenGL context does not support the requested version");
     gl_error_handler(context, plugin);
-  } else {
+  }
+  else
+  {
     GST_DEBUG_OBJECT(plugin, "OpenGL context supports the requested version: %d.%d", major, minor);
-
   }
 
   // Check whether context supports the combination of version with profile
@@ -78,7 +80,9 @@ void gl_init(GstProjectM *plugin)
   {
     GST_ERROR_OBJECT(plugin, "OpenGL context does not support the combination of version with profile");
     gl_error_handler(context, plugin);
-  } else {
+  }
+  else
+  {
     GST_DEBUG_OBJECT(plugin, "OpenGL context supports the combination of version with profile");
   }
 
@@ -88,7 +92,9 @@ void gl_init(GstProjectM *plugin)
   {
     GST_WARNING_OBJECT(plugin, "OpenGL context does not support the 'precision' specifier in GLSL shaders");
     gl_error_handler(context, plugin);
-  } else {
+  }
+  else
+  {
     GST_DEBUG_OBJECT(plugin, "OpenGL context supports the 'precision' specifier in GLSL shaders");
   }
 
@@ -97,7 +103,9 @@ void gl_init(GstProjectM *plugin)
   {
     GST_WARNING_OBJECT(plugin, "OpenGL context does not support the 'precision highp' specifier in GLSL shaders");
     gl_error_handler(context, plugin);
-  } else {
+  }
+  else
+  {
     GST_DEBUG_OBJECT(plugin, "OpenGL context supports the 'precision highp' specifier in GLSL shaders");
   }
 
@@ -139,7 +147,7 @@ void gl_init(GstProjectM *plugin)
   gst_gl_context_set_window(context, window);
 
   // Get current GL context
-  guint curr_con = gst_gl_context_get_current_gl_context(api);
+  guint curr_con = gst_gl_context_get_current_gl_context(GST_GL_PLATFORM_ANY);
   GST_DEBUG_OBJECT(plugin, "OpenGL Current Context: %d\n", curr_con);
 
   // Set display, context, and window on the plugin object

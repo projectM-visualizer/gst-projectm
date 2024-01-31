@@ -24,7 +24,7 @@ struct _GstProjectM
   uint8_t *framebuffer;
 
   projectm_handle handle;
-  
+
   gchar *preset_path;
   gchar *texture_dir_path;
 

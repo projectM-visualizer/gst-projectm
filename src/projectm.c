@@ -39,7 +39,7 @@ void projectm_init(GstProjectM *plugin)
                             "hard-cut-sensitivity=%f, "
                             "soft-cut-duration=%f, "
                             "preset-duration=%f, "
-                            "mesh-size=(%d, %d)"
+                            "mesh-size=(%lu, %lu)"
                             "aspect-correction=%d, "
                             "easter-egg=%f, "
                             "preset-locked=%d, ",

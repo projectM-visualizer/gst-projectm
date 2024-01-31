@@ -9,7 +9,7 @@ G_BEGIN_DECLS
  * @brief Plugin Details
  */
 
-#define PACKAGE "GstProjectMOne"
+#define PACKAGE "GstProjectM"
 #define PACKAGE_NAME "GstProjectM"
 #define PACKAGE_VERSION "0.0.1"
 #define PACKAGE_LICENSE "LGPL"
