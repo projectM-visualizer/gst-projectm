@@ -20,6 +20,8 @@ add_library(gstprojectm SHARED
     src/debug.c
     src/config.h
     src/enums.h
+    src/gl.h
+    src/gl.c
     src/plugin.h
     src/plugin.c
 )

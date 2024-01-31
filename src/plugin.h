@@ -64,7 +64,7 @@ static void gst_projectm_class_init(GstProjectMClass *klass);
 
 static gboolean plugin_init(GstPlugin *plugin);
 
-static void projectm_init_instance(GstProjectM *plugin);
+// static void projectm_init_gl(GstProjectM *plugin);
 
 static gboolean projectm_setup(GstAudioVisualizer *bscope);
 
