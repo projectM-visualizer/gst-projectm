@@ -16,6 +16,8 @@ find_package(GLIB2 REQUIRED)
 add_library(gstprojectm SHARED
     src/caps.h
     src/caps.c
+    src/debug.h
+    src/debug.c
     src/config.h
     src/enums.h
     src/plugin.h

@@ -49,10 +49,6 @@ struct _GstProjectMClass
   GstAudioVisualizerClass parent_class;
 };
 
-static void gl_error_handler(GstGLContext *context, gpointer data);
-
-static void gst_projectm_log_handler (const char *message, const char *funcname, void *priv);
-
 static void gst_projectm_set_property(GObject *object, guint prop_id,
                                       const GValue *value,
                                       GParamSpec *pspec);

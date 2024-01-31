@@ -12,6 +12,7 @@
 #include "plugin.h"
 #include "caps.h"
 #include "config.h"
+#include "debug.h"
 #include "enums.h"
 
 GST_DEBUG_CATEGORY_STATIC(gst_projectm_debug);
@@ -21,20 +22,6 @@ G_DEFINE_TYPE_WITH_CODE(GstProjectM, gst_projectm, GST_TYPE_AUDIO_VISUALIZER,
                         GST_DEBUG_CATEGORY_INIT(gst_projectm_debug,
                                                 "projectM", 0,
                                                 "projectM visualizer plugin with code"));
-
-static void gl_error_handler(GstGLContext *context, gpointer data)
-{
-  GLuint error = context->gl_vtable->GetError();
-  if (error != GL_NONE)
-    g_error("OpenGL Error: 0x%x encountered during processing\n",
-            error);
-}
-
-static void gst_projectm_log_handler(const char *message, const char *funcname, void *priv)
-{
-  GST_CAT_LEVEL_LOG(gst_projectm_debug, (GstDebugLevel)GPOINTER_TO_INT(priv),
-                    NULL, "ProjectM: %s - %s", funcname, message);
-}
 
 void gst_projectm_set_property(GObject *object, guint property_id,
                                const GValue *value, GParamSpec *pspec)
@@ -357,7 +344,7 @@ static void projectm_init_instance(GstProjectM *plugin)
 
   // Check if framebuffer was created
   // gboolean is_fbo_active = gst_gl_context_check_framebuffer_status(context, gst_gl_framebuffer_get_id(fbo));
-  
+
   // if (!is_fbo_active)
   // {
   //   GST_ERROR_OBJECT(plugin, "Failed to create GL framebuffer");
@@ -470,7 +457,7 @@ static gboolean projectm_setup(GstAudioVisualizer *bscope)
                      GST_VIDEO_INFO_HEIGHT(&bscope->vinfo), depth,
                      bscope->vinfo.fps_n, bscope->vinfo.fps_d);
   }
-  
+
   return TRUE;
 }
 
@@ -478,75 +465,8 @@ static gboolean projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio,
                                 GstVideoFrame *video)
 {
   GstProjectM *plugin = GST_PROJECTM(bscope);
-  GstMapInfo amap;
-  gint16 *adata;
-  gint i, channels;
-  gboolean res = TRUE;
-  guint32 vrate;
-  guint num_samples;
 
-  // AUDIO
-  channels = GST_AUDIO_INFO_CHANNELS(&bscope->ainfo);
-  num_samples = amap.size / (GST_AUDIO_INFO_CHANNELS(&bscope->ainfo) * sizeof(gint16));
-
-  GstMemory *mem = gst_buffer_get_all_memory(audio);
-  GST_DEBUG_OBJECT(plugin, "mem size: %lu", mem->size);
-
-  gst_buffer_map(audio, &amap, GST_MAP_READ);
-
-  GST_DEBUG_OBJECT(plugin, "samples: %lu, offset: %lu, offset end: %lu, vrate: %d, fps: %d, req_spf: %d", amap.size / 8, audio->offset, audio->offset_end, bscope->ainfo.rate, bscope->vinfo.fps_n, bscope->req_spf);
-
-  projectm_pcm_add_int16(plugin->handle, (gint16 *)amap.data, amap.size / 4, PROJECTM_STEREO);
-
-  GST_DEBUG_OBJECT(plugin, "audio data: %d %d %d %d", ((gint16 *)amap.data)[100], ((gint16 *)amap.data)[101], ((gint16 *)amap.data)[102], ((gint16 *)amap.data)[103]);
-
-  gst_video_frame_map(video, &video->info, video->buffer, GST_MAP_READWRITE);
-
-  const GstGLFuncs *gl = plugin->context->gl_vtable;
-
-  size_t width, height;
-
-  projectm_get_window_size(plugin->handle, &width, &height);
-  gl->Viewport(0, 0, width, height);
-
-  projectm_opengl_render_frame(plugin->handle);
-  gl_error_handler(plugin->context, plugin);
-
-  uint8_t *data = plugin->framebuffer;
-
-  gl->ReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
-  GST_DEBUG_OBJECT(plugin, "%d %d %d %d", data[0], data[1], data[2], data[3]);
-
-  // gl_error_handler(plugin->context, plugin);
-
-  gst_gl_context_swap_buffers(plugin->context);
-
-  uint8_t *vdata = ((uint8_t *)(video->data[0]));
-
-  // RGBA
-  // for (int r = 0; r < width*height*4; r+=4) {
-  //   vdata[r+3] = data[r];
-  //   //vdata[r+1] = data[r+1];
-  //   //vdata[r+2] = data[r+2];
-  //   vdata[r] = data[r+3];
-  // }
-  
-  // BGRA
-  for (int r = 0; r < width * height * 4; r += 4)
-  {
-    vdata[r + 3] = data[r];
-    vdata[r + 2] = data[r + 2];
-    vdata[r + 1] = data[r + 1];
-    vdata[r] = data[r + 3];
-  }
-
-  GST_DEBUG_OBJECT(plugin, "v2 %d %d\n", GST_VIDEO_FRAME_N_PLANES(video), ((uint8_t *)(GST_VIDEO_FRAME_PLANE_DATA(video, 0)))[0]);
-
-  GST_DEBUG_OBJECT(plugin, "rendered one frame");
-done:
-  gst_buffer_unmap(audio, &amap);
-
-  return res;
+  return true;
 }
 
 static gboolean plugin_init(GstPlugin *plugin)
