@@ -10,15 +10,15 @@
 
 <br />
 
-<h3 align="center">gst-plugin-projectm</h3>
+<h3 align="center">gst-projectm</h3>
 
   <p align="center">
     GStreamer plugin utilizing the <a href="https://github.com/projectM-visualizer/projectm" target="_blank">ProjectM</a> library.
     <br />
     <br />
-    <a href="https://github.com/anomievision/gst-plugin-projectm/issues" target="_blank">Report Bug</a>
+    <a href="https://github.com/projectM-visualizer/gst-projectm/issues" target="_blank">Report Bug</a>
     ·
-    <a href="https://github.com/anomievision/gst-plugin-projectm/issues" target="_blank">Request Feature</a>
+    <a href="https://github.com/projectM-visualizer/gst-projectm/issues" target="_blank">Request Feature</a>
   </p>
 </div>
 
@@ -89,19 +89,19 @@ Blaquewithaq (Discord: SoFloppy#1289) - [@anomievision](https://twitter.com/anom
 <!----------------------------------------------------------------------->
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/anomievision/gst-plugin-projectm.svg?style=for-the-badge
-[contributors-url]: https://github.com/anomievision/gst-plugin-projectm/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/anomievision/gst-plugin-projectm.svg?style=for-the-badge
-[forks-url]: https://github.com/anomievision/gst-plugin-projectm/network/members
-[stars-shield]: https://img.shields.io/github/stars/anomievision/gst-plugin-projectm.svg?style=for-the-badge
-[stars-url]: https://github.com/anomievision/gst-plugin-projectm/stargazers
-[issues-shield]: https://img.shields.io/github/issues/anomievision/gst-plugin-projectm.svg?style=for-the-badge
-[issues-url]: https://github.com/anomievision/gst-plugin-projectm/issues
-[license-shield]: https://img.shields.io/github/license/anomievision/gst-plugin-projectm.svg?style=for-the-badge
-[license-url]: https://github.com/anomievision/gst-plugin-projectm/blob/master/LICENSE
-[crates-shield]: https://img.shields.io/crates/v/gst-plugin-projectm?style=for-the-badge
-[crates-url]: https://crates.io/crates/gst-plugin-projectm
-[crates-dl-shield]: https://img.shields.io/crates/d/gst-plugin-projectm?style=for-the-badge
-[crates-dl-url]: https://crates.io/crates/gst-plugin-projectm
+[contributors-shield]: https://img.shields.io/github/contributors/projectM-visualizer/gst-projectm.svg?style=for-the-badge
+[contributors-url]: https://github.com/projectM-visualizer/gst-projectm/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/projectM-visualizer/gst-projectm.svg?style=for-the-badge
+[forks-url]: https://github.com/projectM-visualizer/gst-projectm/network/members
+[stars-shield]: https://img.shields.io/github/stars/projectM-visualizer/gst-projectm.svg?style=for-the-badge
+[stars-url]: https://github.com/projectM-visualizer/gst-projectm/stargazers
+[issues-shield]: https://img.shields.io/github/issues/projectM-visualizer/gst-projectm.svg?style=for-the-badge
+[issues-url]: https://github.com/projectM-visualizer/gst-projectm/issues
+[license-shield]: https://img.shields.io/github/license/projectM-visualizer/gst-projectm.svg?style=for-the-badge
+[license-url]: https://github.com/projectM-visualizer/gst-projectm/blob/master/LICENSE
+[crates-shield]: https://img.shields.io/crates/v/gst-projectm?style=for-the-badge
+[crates-url]: https://crates.io/crates/gst-projectm
+[crates-dl-shield]: https://img.shields.io/crates/d/gst-projectm?style=for-the-badge
+[crates-dl-url]: https://crates.io/crates/gst-projectm
 [discord-shield]: https://img.shields.io/discord/737206408482914387?style=for-the-badge
 [discord-url]: https://discord.gg/7fQXN43n9W

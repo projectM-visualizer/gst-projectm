@@ -13,7 +13,7 @@
 1. Download (or clone, if git installed) the repository
 
 ```bash
-git clone https://github.com/anomievision/gst-plugin-projectm.git
+git clone https://github.com/projectM-visualizer/gst-projectm.git
 ``` 
 
 2. Setup

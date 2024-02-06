@@ -43,7 +43,7 @@ case "$1" in
     "--preset")
         GST_DEBUG=4 gst-launch-1.0 -v \
             audiotestsrc ! queue ! audioconvert ! \
-            projectm preset="test/presets/215-wave.milk" \
+            projectm preset="test/presets/250-wavecode.milk.milk" \
             ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
         ;;
 
@@ -51,7 +51,7 @@ case "$1" in
         GST_DEBUG=3 gst-launch-1.0 -v \
             audiotestsrc ! queue ! audioconvert ! \
             projectm \
-            preset="test/presets/215-wave.milk" \
+            preset="test/presets/250-wavecode.milk.milk" \
             texture-dir="test/textures" \
             beat-sensitivity=0.5 \
             hard-cut-duration=1 \
@@ -68,7 +68,7 @@ case "$1" in
     "--output-video")
         GST_DEBUG=3 gst-launch-1.0 -v \
             filesrc location="test/audio/upbeat-future-bass.mp3" ! decodebin ! audioconvert ! \
-            projectm ! videoscale ! videoconvert ! video/x-raw,width=1280,height=720 ! \
+            projectm preset="test/presets/250-wavecode.milk.milk" ! videoscale ! videoconvert ! video/x-raw,width=1280,height=720 ! \
             x264enc ! mp4mux ! filesink location="test/output/test_video.mp4"
         ;;
 
@@ -77,7 +77,7 @@ case "$1" in
             filesrc location="test/audio/upbeat-future-bass.mp3" ! decodebin name=dec ! \
             audioconvert ! avenc_aac ! avmux_mp4 ! filesink location="test/output/video2.mp4" \
             dec. ! \
-            projectm ! videoconvert ! x264enc ! avenc_mp4 ! avmux_mp4.video_0
+            projectm preset="test/presets/250-wavecode.milk.milk" ! videoconvert ! x264enc ! avenc_mp4 ! avmux_mp4.video_0
         ;;
 
     *)

@@ -1,14 +1,4 @@
-# BOUNTY
-
-### [[$500 BOUNTY] Implement a cross-platform GStreamer plug-in for libprojectM](https://github.com/projectM-visualizer/projectm/issues/668)
-
-## Summary
-
-Implement a cross-platform GStreamer plug-in for libprojectM
-  - Ensure cross-platform compatibility with GStreamer and libprojectM. (Linux, OSX, Windows)
-  - Implement the plug-in using the new C API in libprojectM 4.0 and link to the shared library.
-  - Accept an audio/x-raw stream and forward it to projectM.
-  - Generate a video/x-raw stream as the plug-in's output.
+# OVERVIEW
   
 ## Details
 
@@ -47,11 +37,7 @@ Implement a cross-platform GStreamer plug-in for libprojectM
 - **Windows**:  ***BROKEN*** - After days of testing, I've yet to find a solution to GStreamers linking problem when using plugins.
   - Wont run with inspect/launch. DLL dependency issue
 
-## Contributions
+## Contributors
 
-- [Discord: tristancmoi](https://github.com/hashFactory) [**AWARD: 20%**]
-  - Provided a semi-working example of a GStreamer plugin utilizing the ProjectM library, on Linux
-- [Discord: CodAv](https://github.com/kblaschke) [**AWARD: 20%**]
-  - Provided knowledge of C#, and GL
-  - Traced OSX issues
-  - Traced GL issues
+- [Discord: tristancmoi](https://github.com/hashFactory)
+- [Discord: CodAv](https://github.com/kblaschke)
