@@ -54,6 +54,8 @@ build() {
     # Move to dist
     if [ -f "$1/libgstprojectm.so" ] ; then
         mv "$1/libgstprojectm.so" "$2"
+    elif [ -f "$1/libgstprojectm.dylib" ] ; then
+        mv "$1/libgstprojectm.dylib" "$2"
     else
         echo "Build failed!"
         exit 1
@@ -63,7 +65,7 @@ build() {
 # Prompt user to install build
 prompt_install() {
     # Install to gstreamer plugin, if found
-    if [ -f "$2/libgstprojectm.so" ] ; then
+    if [ -f "$2/libgstprojectm.so" ] || [ -f "$2/libgstprojectm.dylib" ]; then
         if [ "$1" = false ] ; then
             echo
             echo -n "Install to gstreamer plugins? (Y/n): "
@@ -77,7 +79,14 @@ prompt_install() {
             mkdir -p "$HOME/.local/share/gstreamer-1.0/plugins/"
             
             # Move the file to the destination, overwriting if it exists
-            mv "$2/libgstprojectm.so" "$HOME/.local/share/gstreamer-1.0/plugins/"
+            if [ -f "$2/libgstprojectm.so" ] ; then
+                mv "$2/libgstprojectm.so" "$HOME/.local/share/gstreamer-1.0/plugins/"
+            elif [ -f "$2/libgstprojectm.dylib" ] ; then
+                mv "$2/libgstprojectm.dylib" "$HOME/.local/share/gstreamer-1.0/plugins/"
+            else
+                echo "Install failed!"
+                exit 1
+            fi
             
             # Print example command
             echo
@@ -89,7 +98,7 @@ prompt_install() {
             echo 'You can install the plugin manually by moving <dist/libgstprojectm.so> to <$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.so>'
         fi
     else
-        echo "Build failed!"
+        echo "Install failed!"
         exit 1
     fi
 }

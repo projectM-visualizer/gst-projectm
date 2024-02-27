@@ -11,7 +11,7 @@ if ! command -v gst-launch-1.0 > /dev/null 2>&1; then
 fi
 
 # Check if plugin is installed
-if [ ! -f "$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.so" ]; then
+if [ ! -f "$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.so" ] && [ ! -f "$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.dylib" ]; then
     echo "libgstprojectm.so is missing. Please install it and try again."
     exit 1
 fi
