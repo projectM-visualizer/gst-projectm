@@ -12,21 +12,26 @@
 GST_DEBUG_CATEGORY_STATIC(projectm_debug);
 #define GST_CAT_DEFAULT projectm_debug
 
-void projectm_init(GstProjectM *plugin)
+projectm_handle projectm_init(GstProjectM *plugin)
 {
+    projectm_handle handle = NULL;
     GST_DEBUG_CATEGORY_INIT(projectm_debug, "projectm",
                             0, "ProjectM");
 
-    // Create ProjectM instance
-    plugin->handle = projectm_create();
+    GstAudioVisualizer *bscope = GST_AUDIO_VISUALIZER(plugin);
 
-    if (!plugin->handle)
+    // Create ProjectM instance
+    GST_DEBUG_OBJECT(plugin, "Creating projectM instance..");
+    handle = projectm_create();
+
+    if (!handle)
     {
-        GST_INFO("Could not create instance");
+        GST_DEBUG_OBJECT(plugin, "project_create() returned NULL, projectM instance was not created!");
+        return NULL;
     }
     else
     {
-        GST_INFO("Created instance!");
+        GST_DEBUG_OBJECT(plugin, "Created projectM instance!");
     }
 
     // Log properties
@@ -59,39 +64,41 @@ void projectm_init(GstProjectM *plugin)
 
     // Load preset file if path is provided
     if (plugin->preset_path != NULL)
-        projectm_load_preset_file(plugin->handle, plugin->preset_path, false);
+        projectm_load_preset_file(handle, plugin->preset_path, false);
 
     // Set texture search path if directory path is provided
     if (plugin->texture_dir_path != NULL)
     {
         const gchar *texturePaths[1] = {plugin->texture_dir_path};
-        projectm_set_texture_search_paths(plugin->handle, texturePaths, 1);
+        projectm_set_texture_search_paths(handle, texturePaths, 1);
     }
 
     // Set properties
-    projectm_set_beat_sensitivity(plugin->handle, plugin->beat_sensitivity);
-    projectm_set_hard_cut_duration(plugin->handle, plugin->hard_cut_duration);
-    projectm_set_hard_cut_enabled(plugin->handle, plugin->hard_cut_enabled);
-    projectm_set_hard_cut_sensitivity(plugin->handle, plugin->hard_cut_sensitivity);
-    projectm_set_soft_cut_duration(plugin->handle, plugin->soft_cut_duration);
+    projectm_set_beat_sensitivity(handle, plugin->beat_sensitivity);
+    projectm_set_hard_cut_duration(handle, plugin->hard_cut_duration);
+    projectm_set_hard_cut_enabled(handle, plugin->hard_cut_enabled);
+    projectm_set_hard_cut_sensitivity(handle, plugin->hard_cut_sensitivity);
+    projectm_set_soft_cut_duration(handle, plugin->soft_cut_duration);
 
     // Set preset duration, or set to in infinite duration if zero
     if (plugin->preset_duration > 0.0)
     {
-        projectm_set_preset_duration(plugin->handle, plugin->preset_duration);
+        projectm_set_preset_duration(handle, plugin->preset_duration);
     }
     else
     {
-        projectm_set_preset_duration(plugin->handle, 999999.0);
+        projectm_set_preset_duration(handle, 999999.0);
     }
 
-    projectm_set_mesh_size(plugin->handle, plugin->mesh_width, plugin->mesh_height);
-    projectm_set_aspect_correction(plugin->handle, plugin->aspect_correction);
-    projectm_set_easter_egg(plugin->handle, plugin->easter_egg);
-    projectm_set_preset_locked(plugin->handle, plugin->preset_locked);
+    projectm_set_mesh_size(handle, plugin->mesh_width, plugin->mesh_height);
+    projectm_set_aspect_correction(handle, plugin->aspect_correction);
+    projectm_set_easter_egg(handle, plugin->easter_egg);
+    projectm_set_preset_locked(handle, plugin->preset_locked);
 
-    projectm_set_fps(plugin->handle, plugin->fps);
-    projectm_set_window_size(plugin->handle, plugin->window_width, plugin->window_height);
+    projectm_set_fps(handle, GST_VIDEO_INFO_FPS_N(&bscope->vinfo));
+    projectm_set_window_size(handle, GST_VIDEO_INFO_WIDTH(&bscope->vinfo), GST_VIDEO_INFO_HEIGHT(&bscope->vinfo));
+
+    return handle;
 }
 
 // void projectm_render(GstProjectM *plugin, gint16 *samples, gint sample_count)

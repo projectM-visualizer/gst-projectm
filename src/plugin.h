@@ -2,28 +2,19 @@
 #define __GST_PROJECTM_H__
 
 #include <gst/gst.h>
-#include <gst/gl/gl.h>
-#include <gst/pbutils/gstaudiovisualizer.h>
+#include "gstglbaseaudiovisualizer.h"
 
-#include <projectM-4/projectM.h>
+typedef struct _GstProjectMPrivate GstProjectMPrivate;
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_PROJECTM (gst_projectm_get_type())
 G_DECLARE_FINAL_TYPE(GstProjectM, gst_projectm, GST,
-                     PROJECTM, GstAudioVisualizer)
+                     PROJECTM, GstGLBaseAudioVisualizer)
 
 struct _GstProjectM
 {
-  GstAudioVisualizer element;
-
-  GstGLDisplay *display;
-  GstGLWindow *window;
-  GstGLContext *context;
-
-  uint8_t *framebuffer;
-
-  projectm_handle handle;
+  GstGLBaseAudioVisualizer element;
 
   gchar *preset_path;
   gchar *texture_dir_path;
@@ -36,12 +27,11 @@ struct _GstProjectM
   gdouble preset_duration;
   gulong mesh_width;
   gulong mesh_height;
-  gint32 fps;
   gboolean aspect_correction;
   gfloat easter_egg;
   gboolean preset_locked;
-  gulong window_width;
-  gulong window_height;
+
+  GstProjectMPrivate *priv;
 };
 
 struct _GstProjectMClass
@@ -60,13 +50,17 @@ static void gst_projectm_init(GstProjectM *plugin);
 
 static void gst_projectm_finalize(GObject *object);
 
-static gboolean gst_projectm_setup(GstAudioVisualizer *bscope);
+static gboolean gst_projectm_gl_start(GstGLBaseAudioVisualizer *glav);
 
-static gboolean gst_projectm_render(GstAudioVisualizer *bscope, GstBuffer *audio, GstVideoFrame *video);
+static void gst_projectm_gl_stop(GstGLBaseAudioVisualizer *glav);
+
+static gboolean gst_projectm_render(GstGLBaseAudioVisualizer *glav, GstBuffer *audio, GstVideoFrame *video);
 
 static void gst_projectm_class_init(GstProjectMClass *klass);
 
 static gboolean plugin_init(GstPlugin *plugin);
+
+static gboolean gst_projectm_setup(GstGLBaseAudioVisualizer *glav);
 
 G_END_DECLS
 

@@ -4,13 +4,14 @@
 #include <glib.h>
 
 #include "plugin.h"
+#include <projectM-4/projectM.h>
 
 G_BEGIN_DECLS
 
 /**
  * @brief Initialize ProjectM
  */
-void projectm_init(GstProjectM *plugin);
+projectm_handle projectm_init(GstProjectM *plugin);
 
 /**
  * @brief Render ProjectM

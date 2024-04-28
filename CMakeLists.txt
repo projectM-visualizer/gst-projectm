@@ -20,12 +20,12 @@ add_library(gstprojectm SHARED
     src/debug.c
     src/config.h
     src/enums.h
-    src/gl.h
-    src/gl.c
     src/plugin.h
     src/plugin.c
     src/projectm.h
     src/projectm.c
+    src/gstglbaseaudiovisualizer.h
+    src/gstglbaseaudiovisualizer.c
 )
 
 target_include_directories(gstprojectm
@@ -49,6 +49,14 @@ message(STATUS "GSTREAMER_GL_LIBRARIES: ${GSTREAMER_GL_LIBRARIES}")
 message(STATUS "GLIB2_INCLUDE_DIR: ${GLIB2_INCLUDE_DIR}")
 message(STATUS "GLIB2_LIBRARIES: ${GLIB2_LIBRARIES}")
 message(STATUS "CMAKE_CURRENT_SOURCE_DIR: ${CMAKE_CURRENT_SOURCE_DIR}")
+
+# GLEW needs to be initialized if libprojectM depends on it.
+if(TARGET GLEW::glew OR TARGET GLEW::glew_s)
+    target_compile_definitions(gstprojectm
+            PRIVATE
+            USE_GLEW
+    )
+endif()
 
 target_link_libraries(gstprojectm
     PRIVATE
