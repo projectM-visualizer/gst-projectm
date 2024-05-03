@@ -2,6 +2,10 @@
   "dependencies": [
     "glew",
     "glib",
-    "gstreamer"
+    "gstreamer",
+    {
+      "name": "pkgconf",
+      "platform": "windows"
+    }
   ]
 }
