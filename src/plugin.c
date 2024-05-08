@@ -234,6 +234,7 @@ static gboolean gst_projectm_gl_start(GstGLBaseAudioVisualizer *glav)
       GST_ERROR_OBJECT(plugin, "ProjectM could not be initialized");
       return FALSE;
     }
+    gl_error_handler(glav->context, plugin);
   }
 
   return TRUE;

@@ -298,7 +298,7 @@ gst_gl_base_audio_visualizer_render (GstAudioVisualizer *bscope, GstBuffer *audi
 
     g_rec_mutex_lock (&glav->priv->context_lock);
 
-    // make params privately accessible to the plugin
+    // wrap params into cb_params struct to pass them to the GL window/thread via userdata pointer
     cb_params.glav = glav;
     cb_params.in_audio = audio;
     cb_params.out_video = video;
