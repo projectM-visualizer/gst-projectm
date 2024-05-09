@@ -90,7 +90,7 @@ function Start-Build {
         Read-LibsToDest -Source $Build\Release -Destination $Dist -RequiredLibs $RequiredBuildLibs
 
         $RequiredExternalLibs = @("projectM-4.dll")
-        Read-LibsToDest -Source $Env:PROJECTM_ROOT\lib -Destination $Dist -RequiredLibs $RequiredExternalLibs
+        Read-LibsToDest -Source $Env:PROJECTM_ROOT\bin -Destination $Dist -RequiredLibs $RequiredExternalLibs
     }
     else {
         Write-Host "Build failed!"

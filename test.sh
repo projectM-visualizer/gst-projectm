@@ -1,3 +1,18 @@
+#!/bin/bash
+set -e
+
+# Set variables based on OS
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    LIB_EXT="so"
+    VIDEO_SINK="xvimagesink"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    LIB_EXT="dylib"
+    VIDEO_SINK="osxvideosink"
+else
+    echo "Unsupported OS!"
+    exit 1
+fi
+
 # Check if gst-inspect-1.0 is installed
 if ! command -v gst-inspect-1.0 > /dev/null 2>&1; then
     echo "gst-inspect-1.0 is not installed. Please install it and try again."
@@ -11,8 +26,8 @@ if ! command -v gst-launch-1.0 > /dev/null 2>&1; then
 fi
 
 # Check if plugin is installed
-if [ ! -f "$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.so" ] && [ ! -f "$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.dylib" ]; then
-    echo "libgstprojectm.so is missing. Please install it and try again."
+if [ ! -f "$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.$LIB_EXT" ]; then
+    echo "libgstprojectm.$LIB_EXT is missing. Please install it and try again."
     exit 1
 fi
 
@@ -37,14 +52,14 @@ case "$1" in
         GST_DEBUG=projectm:5 gst-launch-1.0 -v \
             audiotestsrc ! queue ! audioconvert ! \
             projectm \
-            ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+            ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! $VIDEO_SINK sync=false
         ;;
 
     "--preset")
         GST_DEBUG=4 gst-launch-1.0 -v \
             audiotestsrc ! queue ! audioconvert ! \
             projectm preset="test/presets/250-wavecode.milk.milk" \
-            ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false
+            ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! $VIDEO_SINK sync=false
         ;;
 
     "--properties")
@@ -62,7 +77,7 @@ case "$1" in
             mesh-size="512,512" \
             easter-egg=0.75 \
             preset-locked=false \
-            ! "video/x-raw,width=512,height=512,framerate=30/1" ! videoconvert ! xvimagesink sync=false
+            ! "video/x-raw,width=512,height=512,framerate=30/1" ! videoconvert ! $VIDEO_SINK sync=false
         ;;
 
     "--output-video")

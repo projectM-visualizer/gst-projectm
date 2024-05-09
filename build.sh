@@ -1,6 +1,18 @@
 #!/bin/bash
 set -e
 
+# Set variables based on OS
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    LIB_EXT="so"
+    VIDEO_SINK="xvimagesink"
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    LIB_EXT="dylib"
+    VIDEO_SINK="osxvideosink"
+else
+    echo "Unsupported OS!"
+    exit 1
+fi
+
 # ------------
 # FUNCTIONS
 
@@ -52,10 +64,8 @@ build() {
     cmake --build "$1" --config "Release" --parallel
     
     # Move to dist
-    if [ -f "$1/libgstprojectm.so" ] ; then
-        mv "$1/libgstprojectm.so" "$2"
-    elif [ -f "$1/libgstprojectm.dylib" ] ; then
-        mv "$1/libgstprojectm.dylib" "$2"
+    if [ -f "$1/libgstprojectm.$LIB_EXT" ] ; then
+        mv "$1/libgstprojectm.$LIB_EXT" "$2"
     else
         echo "Build failed!"
         exit 1
@@ -65,7 +75,7 @@ build() {
 # Prompt user to install build
 prompt_install() {
     # Install to gstreamer plugin, if found
-    if [ -f "$2/libgstprojectm.so" ] || [ -f "$2/libgstprojectm.dylib" ]; then
+    if [ -f "$2/libgstprojectm.$LIB_EXT" ]; then
         if [ "$1" = false ] ; then
             echo
             echo -n "Install to gstreamer plugins? (Y/n): "
@@ -79,10 +89,8 @@ prompt_install() {
             mkdir -p "$HOME/.local/share/gstreamer-1.0/plugins/"
             
             # Move the file to the destination, overwriting if it exists
-            if [ -f "$2/libgstprojectm.so" ] ; then
-                mv "$2/libgstprojectm.so" "$HOME/.local/share/gstreamer-1.0/plugins/"
-            elif [ -f "$2/libgstprojectm.dylib" ] ; then
-                mv "$2/libgstprojectm.dylib" "$HOME/.local/share/gstreamer-1.0/plugins/"
+            if [ -f "$2/libgstprojectm.$LIB_EXT" ] ; then
+                mv "$2/libgstprojectm.$LIB_EXT" "$HOME/.local/share/gstreamer-1.0/plugins/"
             else
                 echo "Install failed!"
                 exit 1
@@ -91,11 +99,11 @@ prompt_install() {
             # Print example command
             echo
             echo "Done! Here's an example command:"
-            echo 'gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! xvimagesink sync=false'
+            echo "gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw,width=512,height=512,framerate=60/1" ! videoconvert ! $VIDEO_SINK sync=false"
         else
             echo
             echo "Done!"
-            echo 'You can install the plugin manually by moving <dist/libgstprojectm.so> to <$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.so>'
+            echo "You can install the plugin manually by moving <dist/libgstprojectm.$LIB_EXT> to <$HOME/.local/share/gstreamer-1.0/plugins/libgstprojectm.$LIB_EXT>"
         fi
     else
         echo "Install failed!"
