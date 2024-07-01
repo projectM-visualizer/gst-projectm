@@ -1,3 +1,4 @@
+#include <projectM-4/parameters.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -26,6 +27,9 @@ struct _GstProjectMPrivate
 {
   GLenum gl_format;
   projectm_handle handle;
+
+  GstClockTime first_frame_time;
+  gboolean first_frame_received;
 };
 
 G_DEFINE_TYPE_WITH_CODE(GstProjectM, gst_projectm, GST_TYPE_GL_BASE_AUDIO_VISUALIZER, G_ADD_PRIVATE (GstProjectM)
@@ -286,6 +290,25 @@ static gboolean gst_projectm_setup(GstGLBaseAudioVisualizer *glav) {
   return TRUE;
 }
 
+static double get_seconds_since_first_frame(GstProjectM *plugin, GstVideoFrame *frame)
+{
+  if (!plugin->priv->first_frame_received) {
+    // Store the timestamp of the first frame
+    plugin->priv->first_frame_time = GST_BUFFER_PTS (frame->buffer);
+    plugin->priv->first_frame_received = TRUE;
+    return 0.0;
+  } 
+
+  // Calculate elapsed time
+  GstClockTime current_time = GST_BUFFER_PTS (frame->buffer);
+  GstClockTime elapsed_time = current_time - plugin->priv->first_frame_time;
+
+  // Convert to fractional seconds
+  gdouble elapsed_seconds = (gdouble) elapsed_time / GST_SECOND;
+
+  return elapsed_seconds;
+}
+
 
 // TODO: CLEANUP & ADD DEBUGGING
 static gboolean gst_projectm_render(GstGLBaseAudioVisualizer *glav, GstBuffer *audio, GstVideoFrame *video)
@@ -294,6 +317,10 @@ static gboolean gst_projectm_render(GstGLBaseAudioVisualizer *glav, GstBuffer *a
 
   GstMapInfo audioMap;
   gboolean result = TRUE;
+
+  // get current gst (PTS) time and set projectM time
+  double seconds_since_first_frame = get_seconds_since_first_frame(plugin, video);
+  projectm_set_frame_time(plugin->priv->handle, seconds_since_first_frame);
 
   // AUDIO
   gst_buffer_map(audio, &audioMap, GST_MAP_READ);
