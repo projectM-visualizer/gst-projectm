@@ -37,7 +37,7 @@ projectm_handle projectm_init(GstProjectM *plugin) {
 
     // initialize preset playlist
     playlist = projectm_playlist_create(handle);
-    projectm_playlist_set_shuffle(playlist, true);
+    projectm_playlist_set_shuffle(playlist, plugin->shuffle_presets);
     // projectm_playlist_set_preset_switched_event_callback(_playlist, &ProjectMWrapper::PresetSwitchedEvent, static_cast<void*>(this));
 
     // Log properties
