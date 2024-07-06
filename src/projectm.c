@@ -13,8 +13,7 @@
 GST_DEBUG_CATEGORY_STATIC(projectm_debug);
 #define GST_CAT_DEFAULT projectm_debug
 
-projectm_handle projectm_init(GstProjectM *plugin)
-{
+projectm_handle projectm_init(GstProjectM *plugin) {
     projectm_handle handle = NULL;
     projectm_playlist_handle playlist = NULL;
     GST_DEBUG_CATEGORY_INIT(projectm_debug, "projectm",
@@ -54,7 +53,8 @@ projectm_handle projectm_init(GstProjectM *plugin)
                             "mesh-size=(%lu, %lu)"
                             "aspect-correction=%d, "
                             "easter-egg=%f, "
-                            "preset-locked=%d, ",
+                            "preset-locked=%d, "
+                            "shuffle-presets=%d",
                     plugin->preset_path,
                     plugin->texture_dir_path,
                     plugin->beat_sensitivity,
@@ -67,7 +67,8 @@ projectm_handle projectm_init(GstProjectM *plugin)
                     plugin->mesh_height,
                     plugin->aspect_correction,
                     plugin->easter_egg,
-                    plugin->preset_locked);
+                    plugin->preset_locked,
+                    plugin->shuffle_presets);
 
     // Load preset file if path is provided
     if (plugin->preset_path != NULL) {
@@ -95,8 +96,9 @@ projectm_handle projectm_init(GstProjectM *plugin)
         projectm_set_preset_duration(handle, plugin->preset_duration);
 
         // kick off the first preset
-        if (projectm_playlist_size(playlist) > 0 && ! plugin->preset_locked)
-        projectm_playlist_play_next(playlist, true);
+        if (projectm_playlist_size(playlist) > 1 && ! plugin->preset_locked && plugin->shuffle_presets) {
+            projectm_playlist_play_next(playlist, true);
+        }
     }
     else
     {

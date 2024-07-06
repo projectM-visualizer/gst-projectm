@@ -30,6 +30,7 @@ struct _GstProjectM
   gboolean aspect_correction;
   gfloat easter_egg;
   gboolean preset_locked;
+  gboolean shuffle_presets;
 
   GstProjectMPrivate *priv;
 };

@@ -95,6 +95,9 @@ void gst_projectm_set_property(GObject *object, guint property_id,
   case PROP_PRESET_LOCKED:
     plugin->preset_locked = g_value_get_boolean(value);
     break;
+  case PROP_SHUFFLE_PRESETS:
+    plugin->shuffle_presets = g_value_get_boolean(value);
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
     break;
@@ -151,6 +154,9 @@ void gst_projectm_get_property(GObject *object, guint property_id,
   case PROP_PRESET_LOCKED:
     g_value_set_boolean(value, plugin->preset_locked);
     break;
+  case PROP_SHUFFLE_PRESETS:
+    g_value_set_boolean(value, plugin->shuffle_presets);
+    break;
   default:
     G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
     break;
@@ -170,6 +176,7 @@ static void gst_projectm_init(GstProjectM *plugin)
   plugin->hard_cut_sensitivity = DEFAULT_HARD_CUT_SENSITIVITY;
   plugin->soft_cut_duration = DEFAULT_SOFT_CUT_DURATION;
   plugin->preset_duration = DEFAULT_PRESET_DURATION;
+  plugin->shuffle_presets = DEFAULT_SHUFFLE_PRESETS;
 
   const gchar *meshSizeStr = DEFAULT_MESH_SIZE;
   gint width, height;
@@ -249,7 +256,6 @@ static gboolean gst_projectm_setup(GstGLBaseAudioVisualizer *glav) {
 
   // Calculate required samples per frame
   bscope->req_spf = (bscope->ainfo.channels * bscope->ainfo.rate * 2) / bscope->vinfo.fps_n;
-
 
   // get GStreamer video format and map it to the corresponding OpenGL pixel format
   const GstVideoFormat video_format = GST_VIDEO_INFO_FORMAT(&bscope->vinfo);
@@ -421,6 +427,12 @@ static void gst_projectm_class_init(GstProjectMClass *klass)
                                   g_param_spec_boolean("preset-locked", "Preset Locked",
                                                        "Locks or unlocks the current preset. When locked, the visualizer remains on the current preset without automatic changes.",
                                                        DEFAULT_PRESET_LOCKED,
+                                                       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property(gobject_class, PROP_SHUFFLE_PRESETS,
+                                  g_param_spec_boolean("shuffle-presets", "Shuffle Presets",
+                                                       "Enables or disables preset shuffling. When enabled, the visualizer randomly selects presets from the playlist if presets are provided and not locked.",
+                                                       DEFAULT_SHUFFLE_PRESETS,
                                                        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_projectm_finalize;
