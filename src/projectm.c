@@ -96,7 +96,7 @@ projectm_handle projectm_init(GstProjectM *plugin) {
         projectm_set_preset_duration(handle, plugin->preset_duration);
 
         // kick off the first preset
-        if (projectm_playlist_size(playlist) > 1 && ! plugin->preset_locked && plugin->shuffle_presets) {
+        if (projectm_playlist_size(playlist) > 1 && ! plugin->preset_locked) {
             projectm_playlist_play_next(playlist, true);
         }
     }
