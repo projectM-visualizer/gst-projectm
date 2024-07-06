@@ -42,7 +42,7 @@ jobs:
         if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Configure Build
-        run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON
+        run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON -DENABLE_PLAYLIST=ON
         if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Build Release
