@@ -88,6 +88,8 @@ jobs:
 
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"
+        env:
+          CMAKE_MODULE_PATH: "${{ github.workspace }}/artifacts/lib/cmake"
 
       - name: Build Release
         id: build
