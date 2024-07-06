@@ -5,6 +5,7 @@
 #include <gst/gst.h>
 
 #include <projectM-4/projectM.h>
+#include <projectM-4/playlist.h>
 
 #include "projectm.h"
 #include "plugin.h"
@@ -15,6 +16,7 @@ GST_DEBUG_CATEGORY_STATIC(projectm_debug);
 projectm_handle projectm_init(GstProjectM *plugin)
 {
     projectm_handle handle = NULL;
+    projectm_playlist_handle playlist = NULL;
     GST_DEBUG_CATEGORY_INIT(projectm_debug, "projectm",
                             0, "ProjectM");
 
@@ -33,6 +35,11 @@ projectm_handle projectm_init(GstProjectM *plugin)
     {
         GST_DEBUG_OBJECT(plugin, "Created projectM instance!");
     }
+
+    // initialize preset playlist
+    playlist = projectm_playlist_create(handle);
+    projectm_playlist_set_shuffle(playlist, true);
+    // projectm_playlist_set_preset_switched_event_callback(_playlist, &ProjectMWrapper::PresetSwitchedEvent, static_cast<void*>(this));
 
     // Log properties
     GST_INFO_OBJECT(plugin, "Using Properties: "
@@ -63,8 +70,10 @@ projectm_handle projectm_init(GstProjectM *plugin)
                     plugin->preset_locked);
 
     // Load preset file if path is provided
-    if (plugin->preset_path != NULL)
-        projectm_load_preset_file(handle, plugin->preset_path, false);
+    if (plugin->preset_path != NULL) {
+        int added_count = projectm_playlist_add_path(playlist, plugin->preset_path, true, false);
+        GST_INFO("Loaded preset path: %s, presets found: %d", plugin->preset_path, added_count);
+    }
 
     // Set texture search path if directory path is provided
     if (plugin->texture_dir_path != NULL)
@@ -84,6 +93,10 @@ projectm_handle projectm_init(GstProjectM *plugin)
     if (plugin->preset_duration > 0.0)
     {
         projectm_set_preset_duration(handle, plugin->preset_duration);
+
+        // kick off the first preset
+        if (projectm_playlist_size(playlist) > 0 && ! plugin->preset_locked)
+        projectm_playlist_play_next(playlist, true);
     }
     else
     {

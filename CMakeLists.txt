@@ -9,7 +9,7 @@ project(gstprojectm VERSION 0.0.1)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(projectM4 REQUIRED)
+find_package(projectM4 REQUIRED COMPONENTS Playlist)
 find_package(GStreamer REQUIRED COMPONENTS gstreamer-audio gstreamer-gl gstreamer-pbutils gstreamer-video)
 find_package(GLIB2 REQUIRED)
 
@@ -61,6 +61,7 @@ endif()
 target_link_libraries(gstprojectm
     PRIVATE
         libprojectM::projectM
+        libprojectM::playlist
     PUBLIC
         ${GSTREAMER_LIBRARIES}
         ${GSTREAMER_BASE_LIBRARIES}
