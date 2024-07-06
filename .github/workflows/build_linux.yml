@@ -25,7 +25,7 @@ jobs:
 
       - name: Get ProjectM Git Hash
         id: git-hash
-        run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+        run: echo "hash=$(git rev-parse HEAD)v2" >> $GITHUB_OUTPUT
 
       - name: Cache Install
         id: cache-install
