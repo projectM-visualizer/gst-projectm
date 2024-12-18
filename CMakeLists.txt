@@ -9,14 +9,9 @@ project(gstprojectm VERSION 0.0.1)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(projectM4 REQUIRED)
+find_package(projectM4 4.1.0...<5.0.0 REQUIRED)
 find_package(GStreamer REQUIRED COMPONENTS gstreamer-audio gstreamer-gl gstreamer-pbutils gstreamer-video)
 find_package(GLIB2 REQUIRED)
-
-if(projectM4_VERSION VERSION_LESS 4.2.0)
-    # needed for timekeeper API
-    message(FATAL_ERROR "libprojectM version 4.2.0 or higher is required. Version found: ${projectM4_VERSION}.")
-endif()
 
 add_library(gstprojectm SHARED
     src/caps.h
