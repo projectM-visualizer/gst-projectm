@@ -1,19 +1,18 @@
 #ifndef __GST_PROJECTM_H__
 #define __GST_PROJECTM_H__
 
-#include <gst/gst.h>
 #include "gstglbaseaudiovisualizer.h"
+#include <gst/gst.h>
 
 typedef struct _GstProjectMPrivate GstProjectMPrivate;
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_PROJECTM (gst_projectm_get_type())
-G_DECLARE_FINAL_TYPE(GstProjectM, gst_projectm, GST,
-                     PROJECTM, GstGLBaseAudioVisualizer)
+G_DECLARE_FINAL_TYPE(GstProjectM, gst_projectm, GST, PROJECTM,
+                     GstGLBaseAudioVisualizer)
 
-struct _GstProjectM
-{
+struct _GstProjectM {
   GstGLBaseAudioVisualizer element;
 
   gchar *preset_path;
@@ -30,19 +29,18 @@ struct _GstProjectM
   gboolean aspect_correction;
   gfloat easter_egg;
   gboolean preset_locked;
+  gboolean enable_playlist;
   gboolean shuffle_presets;
 
   GstProjectMPrivate *priv;
 };
 
-struct _GstProjectMClass
-{
+struct _GstProjectMClass {
   GstAudioVisualizerClass parent_class;
 };
 
 static void gst_projectm_set_property(GObject *object, guint prop_id,
-                                      const GValue *value,
-                                      GParamSpec *pspec);
+                                      const GValue *value, GParamSpec *pspec);
 
 static void gst_projectm_get_property(GObject *object, guint prop_id,
                                       GValue *value, GParamSpec *pspec);
@@ -55,7 +53,8 @@ static gboolean gst_projectm_gl_start(GstGLBaseAudioVisualizer *glav);
 
 static void gst_projectm_gl_stop(GstGLBaseAudioVisualizer *glav);
 
-static gboolean gst_projectm_render(GstGLBaseAudioVisualizer *glav, GstBuffer *audio, GstVideoFrame *video);
+static gboolean gst_projectm_render(GstGLBaseAudioVisualizer *glav,
+                                    GstBuffer *audio, GstVideoFrame *video);
 
 static void gst_projectm_class_init(GstProjectMClass *klass);
 
