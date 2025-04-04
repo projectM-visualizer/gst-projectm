@@ -1,11 +1,24 @@
 {
   "dependencies": [
     "glew",
-    "glib",
+    {
+      "name": "glib",
+      "platform": "!windows"
+    },
+    {
+      "name": "glib",
+      "platform": "windows",
+      "version>=": "2.80.0"
+    },
     "gstreamer",
     {
       "name": "pkgconf",
       "platform": "windows"
+    },
+    { "name": "vcpkg-tool-meson",
+      "version>=": "1.3.2",
+      "platform": "windows"
     }
   ]
 }
+
