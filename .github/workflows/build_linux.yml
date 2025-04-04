@@ -15,6 +15,7 @@ jobs:
   build-projectm:
     name: Build ProjectM
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     
     steps:
       - name: Checkout ProjectM
