@@ -16,6 +16,7 @@ GST_DEBUG_CATEGORY_STATIC(projectm_debug);
 projectm_handle projectm_init(GstProjectM *plugin) {
   projectm_handle handle = NULL;
   projectm_playlist_handle playlist = NULL;
+
   GST_DEBUG_CATEGORY_INIT(projectm_debug, "projectm", 0, "ProjectM");
 
   GstAudioVisualizer *bscope = GST_AUDIO_VISUALIZER(plugin);

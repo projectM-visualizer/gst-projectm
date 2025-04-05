@@ -16,7 +16,8 @@ projectm_handle projectm_init(GstProjectM *plugin);
 /**
  * @brief Render ProjectM
  */
-// void projectm_render(GstProjectM *plugin, gint16 *samples, gint sample_count);
+// void projectm_render(GstProjectM *plugin, gint16 *samples, gint
+// sample_count);
 
 G_END_DECLS
 
