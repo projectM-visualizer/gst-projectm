@@ -47,28 +47,29 @@ projectm_handle projectm_init(GstProjectM *plugin) {
   }
 
   // Log properties
-  GST_INFO_OBJECT(plugin,
-                  "Using Properties: "
-                  "preset=%s, "
-                  "texture-dir=%s, "
-                  "beat-sensitivity=%f, "
-                  "hard-cut-duration=%f, "
-                  "hard-cut-enabled=%d, "
-                  "hard-cut-sensitivity=%f, "
-                  "soft-cut-duration=%f, "
-                  "preset-duration=%f, "
-                  "mesh-size=(%lu, %lu)"
-                  "aspect-correction=%d, "
-                  "easter-egg=%f, "
-                  "preset-locked=%d, "
-                  "shuffle-presets=%d",
-                  plugin->preset_path, plugin->texture_dir_path,
-                  plugin->beat_sensitivity, plugin->hard_cut_duration,
-                  plugin->hard_cut_enabled, plugin->hard_cut_sensitivity,
-                  plugin->soft_cut_duration, plugin->preset_duration,
-                  plugin->mesh_width, plugin->mesh_height,
-                  plugin->aspect_correction, plugin->easter_egg,
-                  plugin->preset_locked, plugin->shuffle_presets);
+  GST_INFO_OBJECT(
+      plugin,
+      "Using Properties: "
+      "preset=%s, "
+      "texture-dir=%s, "
+      "beat-sensitivity=%f, "
+      "hard-cut-duration=%f, "
+      "hard-cut-enabled=%d, "
+      "hard-cut-sensitivity=%f, "
+      "soft-cut-duration=%f, "
+      "preset-duration=%f, "
+      "mesh-size=(%lu, %lu)"
+      "aspect-correction=%d, "
+      "easter-egg=%f, "
+      "preset-locked=%d, "
+      "enable-playlist=%d, "
+      "shuffle-presets=%d",
+      plugin->preset_path, plugin->texture_dir_path, plugin->beat_sensitivity,
+      plugin->hard_cut_duration, plugin->hard_cut_enabled,
+      plugin->hard_cut_sensitivity, plugin->soft_cut_duration,
+      plugin->preset_duration, plugin->mesh_width, plugin->mesh_height,
+      plugin->aspect_correction, plugin->easter_egg, plugin->preset_locked,
+      plugin->enable_playlist, plugin->shuffle_presets);
 
   // Load preset file if path is provided
   if (plugin->preset_path != NULL) {
