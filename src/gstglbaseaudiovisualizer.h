@@ -24,7 +24,8 @@
 /*
  * The code in this file is based on code from
  * GStreamer / gst-plugins-base / 1.19.2: gst-libs/gst/gl/gstglbasesrc.h
- * Git Repository: https://github.com/GStreamer/gst-plugins-base/blob/master/gst-libs/gst/gl/gstglbasesrc.h
+ * Git Repository:
+ * https://github.com/GStreamer/gst-plugins-base/blob/master/gst-libs/gst/gl/gstglbasesrc.h
  * Original copyright notice has been retained at the top of this file.
  */
 
@@ -32,28 +33,36 @@
 #define __GST_GL_BASE_AUDIO_VISUALIZER_H__
 
 #include <gst/gl/gstgl_fwd.h>
-#include <gst/video/video-info.h>
 #include <gst/pbutils/gstaudiovisualizer.h>
+#include <gst/video/video-info.h>
 #include <stdint.h>
 
 typedef struct _GstGLBaseAudioVisualizer GstGLBaseAudioVisualizer;
 typedef struct _GstGLBaseAudioVisualizerClass GstGLBaseAudioVisualizerClass;
 typedef struct _GstGLBaseAudioVisualizerPrivate GstGLBaseAudioVisualizerPrivate;
 
-G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseAudioVisualizer , gst_object_unref)
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseAudioVisualizer, gst_object_unref)
 
 G_BEGIN_DECLS
 
 GST_GL_API
 GType gst_gl_base_audio_visualizer_get_type(void);
 
-
-#define GST_TYPE_GL_BASE_AUDIO_VISUALIZER            (gst_gl_base_audio_visualizer_get_type())
-#define GST_GL_BASE_AUDIO_VISUALIZER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_BASE_AUDIO_VISUALIZER,GstGLBaseAudioVisualizer))
-#define GST_GL_BASE_AUDIO_VISUALIZER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GL_BASE_AUDIO_VISUALIZER,GstGLBaseAudioVisualizerClass))
-#define GST_IS_GL_BASE_AUDIO_VISUALIZER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_BASE_AUDIO_VISUALIZER))
-#define GST_IS_GL_BASE_AUDIO_VISUALIZER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_BASE_AUDIO_VISUALIZER))
-#define GST_GL_BASE_AUDIO_VISUALIZER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj) ,GST_TYPE_GL_BASE_AUDIO_VISUALIZER,GstGLBaseAudioVisualizerClass))
+#define GST_TYPE_GL_BASE_AUDIO_VISUALIZER                                      \
+  (gst_gl_base_audio_visualizer_get_type())
+#define GST_GL_BASE_AUDIO_VISUALIZER(obj)                                      \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_BASE_AUDIO_VISUALIZER,        \
+                              GstGLBaseAudioVisualizer))
+#define GST_GL_BASE_AUDIO_VISUALIZER_CLASS(klass)                              \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_GL_BASE_AUDIO_VISUALIZER,         \
+                           GstGLBaseAudioVisualizerClass))
+#define GST_IS_GL_BASE_AUDIO_VISUALIZER(obj)                                   \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_GL_BASE_AUDIO_VISUALIZER))
+#define GST_IS_GL_BASE_AUDIO_VISUALIZER_CLASS(klass)                           \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_GL_BASE_AUDIO_VISUALIZER))
+#define GST_GL_BASE_AUDIO_VISUALIZER_GET_CLASS(obj)                            \
+  (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_GL_BASE_AUDIO_VISUALIZER,         \
+                             GstGLBaseAudioVisualizerClass))
 
 /**
  * GstGLBaseAudioVisualizer:
@@ -63,16 +72,16 @@ GType gst_gl_base_audio_visualizer_get_type(void);
  * The parent instance type of a base GL Audio Visualizer.
  */
 struct _GstGLBaseAudioVisualizer {
-    GstAudioVisualizer parent;
+  GstAudioVisualizer parent;
 
-    /*< public >*/
-    GstGLDisplay *display;
-    GstGLContext *context;
+  /*< public >*/
+  GstGLDisplay *display;
+  GstGLContext *context;
 
-    /*< private >*/
-    gpointer           _padding[GST_PADDING];
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 
-    GstGLBaseAudioVisualizerPrivate *priv;
+  GstGLBaseAudioVisualizerPrivate *priv;
 };
 
 /**
@@ -81,22 +90,24 @@ struct _GstGLBaseAudioVisualizer {
  * @gl_start: called in the GL thread to setup the element GL state.
  * @gl_stop: called in the GL thread to clean up the element GL state.
  * @gl_render: called in the GL thread to fill the current video texture.
- * @setup: called when the format changes (delegate from GstAudioVisualizer.setup)
+ * @setup: called when the format changes (delegate from
+ * GstAudioVisualizer.setup)
  *
  * The base class for OpenGL based audio visualizers.
  *
  */
 struct _GstGLBaseAudioVisualizerClass {
-    GstAudioVisualizerClass parent_class;
+  GstAudioVisualizerClass parent_class;
 
-    /*< public >*/
-    GstGLAPI supported_gl_api;
-    gboolean (*gl_start)          (GstGLBaseAudioVisualizer *glav);
-    void     (*gl_stop)           (GstGLBaseAudioVisualizer *glav);
-    gboolean (*gl_render)         (GstGLBaseAudioVisualizer *glav, GstBuffer* audio, GstVideoFrame *video);
-    gboolean (*setup)             (GstGLBaseAudioVisualizer *glav);
-    /*< private >*/
-    gpointer _padding[GST_PADDING];
+  /*< public >*/
+  GstGLAPI supported_gl_api;
+  gboolean (*gl_start)(GstGLBaseAudioVisualizer *glav);
+  void (*gl_stop)(GstGLBaseAudioVisualizer *glav);
+  gboolean (*gl_render)(GstGLBaseAudioVisualizer *glav, GstBuffer *audio,
+                        GstVideoFrame *video);
+  gboolean (*setup)(GstGLBaseAudioVisualizer *glav);
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 };
 
 G_END_DECLS
