@@ -39,6 +39,7 @@
 <br />
 
 <!-- GETTING STARTED -->
+
 ## Getting Started
 
 The documentation has been organized into distinct files, each dedicated to a specific platform. Within each file, you'll find detailed instructions covering the setup of prerequisites, the building process, installation steps, and guidance on utilizing the plugin on the respective platform.
@@ -47,9 +48,35 @@ The documentation has been organized into distinct files, each dedicated to a sp
 - **[OSX](docs/OSX.md)**
 - **[Windows](docs/WINDOWS.md)**
 
+Once the plugin has been installed, you can use it something like this:
+
+```shell
+gst-launch pipewiresrc ! queue ! audioconvert ! projectm preset=/usr/local/share/projectM/presets preset-duration=5 ! video/x-raw,width=2048,height=1440,framerate=60/1 ! videoconvert ! xvimagesink sync=false
+```
+
+Or to convert an audio file to video:
+
+```shell
+filesrc location=input.mp3 ! decodebin name=dec \
+    decodebin ! tee name=t \
+      t. ! queue ! audioconvert ! audioresample ! \
+            capsfilter caps="audio/x-raw, format=F32LE, channels=2, rate=44100" ! avenc_aac bitrate=256000 ! queue ! mux. \
+      t. ! queue ! audioconvert ! projectm preset=/usr/local/share/projectM/presets preset-duration=3 mesh-size=1024,576 ! \
+            identity sync=false ! videoconvert ! videorate ! video/x-raw,framerate=60/1,width=3840,height=2160 ! \
+            x264enc bitrate=35000 key-int-max=300 speed-preset=veryslow ! video/x-h264,stream-format=avc,alignment=au ! queue ! mux. \
+  mp4mux name=mux ! filesink location=render.mp4;
+```
+
+Available options
+
+```shell
+gst-inspect projectm
+```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -66,6 +93,7 @@ Don't forget to give the project a star! Thanks again!
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the LGPL-2.1 license. See `LICENSE` for more information.
@@ -73,6 +101,7 @@ Distributed under the LGPL-2.1 license. See `LICENSE` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- SUPPORT -->
+
 ## Support
 
 [![Discord][discord-shield]][discord-url]
@@ -80,6 +109,7 @@ Distributed under the LGPL-2.1 license. See `LICENSE` for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTACT -->
+
 ## Contact
 
 Blaquewithaq (Discord: SoFloppy#1289) - [@anomievision](https://twitter.com/anomievision) - anomievision@gmail.com
@@ -89,6 +119,7 @@ Blaquewithaq (Discord: SoFloppy#1289) - [@anomievision](https://twitter.com/anom
 <!----------------------------------------------------------------------->
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+
 [contributors-shield]: https://img.shields.io/github/contributors/projectM-visualizer/gst-projectm.svg?style=for-the-badge
 [contributors-url]: https://github.com/projectM-visualizer/gst-projectm/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/projectM-visualizer/gst-projectm.svg?style=for-the-badge

@@ -4,6 +4,7 @@
 
 #include <gst/gst.h>
 
+#include <projectM-4/playlist.h>
 #include <projectM-4/projectM.h>
 
 #include "plugin.h"
@@ -14,6 +15,8 @@ GST_DEBUG_CATEGORY_STATIC(projectm_debug);
 
 projectm_handle projectm_init(GstProjectM *plugin) {
   projectm_handle handle = NULL;
+  projectm_playlist_handle playlist = NULL;
+
   GST_DEBUG_CATEGORY_INIT(projectm_debug, "projectm", 0, "ProjectM");
 
   GstAudioVisualizer *bscope = GST_AUDIO_VISUALIZER(plugin);
@@ -31,6 +34,18 @@ projectm_handle projectm_init(GstProjectM *plugin) {
     GST_DEBUG_OBJECT(plugin, "Created projectM instance!");
   }
 
+  if (plugin->enable_playlist) {
+    GST_DEBUG_OBJECT(plugin, "Playlist enabled");
+
+    // initialize preset playlist
+    playlist = projectm_playlist_create(handle);
+    projectm_playlist_set_shuffle(playlist, plugin->shuffle_presets);
+    // projectm_playlist_set_preset_switched_event_callback(_playlist,
+    // &ProjectMWrapper::PresetSwitchedEvent, static_cast<void*>(this));
+  } else {
+    GST_DEBUG_OBJECT(plugin, "Playlist disabled");
+  }
+
   // Log properties
   GST_INFO_OBJECT(
       plugin,
@@ -46,16 +61,23 @@ projectm_handle projectm_init(GstProjectM *plugin) {
       "mesh-size=(%lu, %lu)"
       "aspect-correction=%d, "
       "easter-egg=%f, "
-      "preset-locked=%d, ",
+      "preset-locked=%d, "
+      "enable-playlist=%d, "
+      "shuffle-presets=%d",
       plugin->preset_path, plugin->texture_dir_path, plugin->beat_sensitivity,
       plugin->hard_cut_duration, plugin->hard_cut_enabled,
       plugin->hard_cut_sensitivity, plugin->soft_cut_duration,
       plugin->preset_duration, plugin->mesh_width, plugin->mesh_height,
-      plugin->aspect_correction, plugin->easter_egg, plugin->preset_locked);
+      plugin->aspect_correction, plugin->easter_egg, plugin->preset_locked,
+      plugin->enable_playlist, plugin->shuffle_presets);
 
   // Load preset file if path is provided
-  if (plugin->preset_path != NULL)
-    projectm_load_preset_file(handle, plugin->preset_path, false);
+  if (plugin->preset_path != NULL) {
+    int added_count =
+        projectm_playlist_add_path(playlist, plugin->preset_path, true, false);
+    GST_INFO("Loaded preset path: %s, presets found: %d", plugin->preset_path,
+             added_count);
+  }
 
   // Set texture search path if directory path is provided
   if (plugin->texture_dir_path != NULL) {
@@ -73,6 +95,11 @@ projectm_handle projectm_init(GstProjectM *plugin) {
   // Set preset duration, or set to in infinite duration if zero
   if (plugin->preset_duration > 0.0) {
     projectm_set_preset_duration(handle, plugin->preset_duration);
+
+    // kick off the first preset
+    if (projectm_playlist_size(playlist) > 1 && !plugin->preset_locked) {
+      projectm_playlist_play_next(playlist, true);
+    }
   } else {
     projectm_set_preset_duration(handle, 999999.0);
   }
