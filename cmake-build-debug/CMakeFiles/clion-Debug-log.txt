@@ -1,0 +1,30 @@
+/snap/clion/326/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles" -S /home/cyber/dev/pm/gst-projectm -B /home/cyber/dev/pm/gst-projectm/cmake-build-debug
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so
+-- Found GStreamer: GSTREAMER_INCLUDE_DIRS;GSTREAMER_LIBRARIES;GSTREAMER_VERSION;GSTREAMER_BASE_INCLUDE_DIRS;GSTREAMER_BASE_LIBRARIES;GSTREAMER_GSTREAMER-AUDIO_INCLUDE_DIRS;GSTREAMER_GSTREAMER-AUDIO_LIBRARIES;GSTREAMER_GSTREAMER-GL_INCLUDE_DIRS;GSTREAMER_GSTREAMER-GL_LIBRARIES;GSTREAMER_GSTREAMER-PBUTILS_INCLUDE_DIRS;GSTREAMER_GSTREAMER-PBUTILS_LIBRARIES;GSTREAMER_GSTREAMER-VIDEO_INCLUDE_DIRS;GSTREAMER_GSTREAMER-VIDEO_LIBRARIES (found version "1.24.2")
+-- Found GLIB2: /usr/lib/x86_64-linux-gnu/libglib-2.0.so
+-- GSTREAMER_INCLUDE_DIRS: /usr/include/gstreamer-1.0;/usr/include/gstreamer-1.0
+-- GSTREAMER_LIBRARIES: /usr/lib/x86_64-linux-gnu/libgstreamer-1.0.so;/usr/lib/x86_64-linux-gnu/libgstreamer-1.0.so
+-- GSTREAMER_BASE_INCLUDE_DIRS: /usr/include/gstreamer-1.0
+-- GSTREAMER_BASE_LIBRARIES: /usr/lib/x86_64-linux-gnu/libgstbase-1.0.so
+-- GSTREAMER_AUDIO_INCLUDE_DIRS: /usr/include/gstreamer-1.0
+-- GSTREAMER_AUDIO_LIBRARIES: /usr/lib/x86_64-linux-gnu/libgstaudio-1.0.so
+-- GSTREAMER_GL_INCLUDE_DIRS: /usr/include/gstreamer-1.0;/usr/lib/x86_64-linux-gnu/gstreamer-1.0/include
+-- GSTREAMER_GL_LIBRARIES: /usr/lib/x86_64-linux-gnu/libgstgl-1.0.so
+-- GLIB2_INCLUDE_DIR: /usr/include/glib-2.0;/usr/lib/x86_64-linux-gnu/glib-2.0/include
+-- GLIB2_LIBRARIES: /usr/lib/x86_64-linux-gnu/libglib-2.0.so
+-- CMAKE_CURRENT_SOURCE_DIR: /home/cyber/dev/pm/gst-projectm
+-- Configuring done (0.7s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/cyber/dev/pm/gst-projectm/cmake-build-debug
