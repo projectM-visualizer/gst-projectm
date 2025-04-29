@@ -57,14 +57,15 @@ gst-launch pipewiresrc ! queue ! audioconvert ! projectm preset=/usr/local/share
 Or to convert an audio file to video:
 
 ```shell
-filesrc location=input.mp3 ! decodebin name=dec \
+gst-launch-1.0 -e \
+  filesrc location=input.mp3  ! \
     decodebin ! tee name=t \
       t. ! queue ! audioconvert ! audioresample ! \
-            capsfilter caps="audio/x-raw, format=F32LE, channels=2, rate=44100" ! avenc_aac bitrate=256000 ! queue ! mux. \
-      t. ! queue ! audioconvert ! projectm preset=/usr/local/share/projectM/presets preset-duration=3 mesh-size=1024,576 ! \
+            capsfilter caps="audio/x-raw, format=F32LE, channels=2, rate=44100" ! avenc_aac bitrate=320000 ! queue ! mux. \
+      t. ! queue ! audioconvert ! projectm preset=/usr/local/share/projectM/presets texture-dir=/usr/local/share/projectM/textures preset-duration=6 mesh-size=1024,576 ! \
             identity sync=false ! videoconvert ! videorate ! video/x-raw,framerate=60/1,width=3840,height=2160 ! \
-            x264enc bitrate=35000 key-int-max=300 speed-preset=veryslow ! video/x-h264,stream-format=avc,alignment=au ! queue ! mux. \
-  mp4mux name=mux ! filesink location=render.mp4;
+            x264enc bitrate=50000 key-int-max=200 speed-preset=veryslow ! video/x-h264,stream-format=avc,alignment=au ! queue ! mux. \
+    mp4mux name=mux ! filesink location=output.mp4
 ```
 
 Available options
