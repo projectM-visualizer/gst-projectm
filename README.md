@@ -57,6 +57,31 @@ The documentation has been organized into distinct files, each dedicated to a sp
 - **[OSX](docs/OSX.md)**
 - **[Windows](docs/WINDOWS.md)**
 
+Once the plugin has been installed, you can use it something like this:
+
+```shell
+gst-launch pipewiresrc ! queue ! audioconvert ! projectm preset=/usr/local/share/projectM/presets preset-duration=5 ! video/x-raw,width=2048,height=1440,framerate=60/1 ! videoconvert ! xvimagesink sync=false
+```
+
+Or to convert an audio file to video:
+
+```shell
+filesrc location=input.mp3 ! decodebin name=dec \
+    decodebin ! tee name=t \
+      t. ! queue ! audioconvert ! audioresample ! \
+            capsfilter caps="audio/x-raw, format=F32LE, channels=2, rate=44100" ! avenc_aac bitrate=256000 ! queue ! mux. \
+      t. ! queue ! audioconvert ! projectm preset=/usr/local/share/projectM/presets preset-duration=3 mesh-size=1024,576 ! \
+            identity sync=false ! videoconvert ! videorate ! video/x-raw,framerate=60/1,width=3840,height=2160 ! \
+            x264enc bitrate=35000 key-int-max=300 speed-preset=veryslow ! video/x-h264,stream-format=avc,alignment=au ! queue ! mux. \
+  mp4mux name=mux ! filesink location=render.mp4;
+```
+
+Available options
+
+```shell
+gst-inspect projectm
+```
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- EASY AUDIO TO VIDEO CONVERSION -->
