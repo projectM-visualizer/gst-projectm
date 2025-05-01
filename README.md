@@ -97,6 +97,8 @@ The included Docker container has:
 
 The first run will build the Docker container automatically. It will take a good while, so be patient. Once built, it will be cached for future runs.
 
+Note that running the conversion can take hours depending on the length of the audio file and the selected settings.
+
 ### Conversion Examples
 
 #### Basic Conversion

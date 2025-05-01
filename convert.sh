@@ -4,14 +4,37 @@ set -e
 # Default values
 PRESET_PATH="/usr/local/share/projectM/presets"
 TEXTURE_DIR="/usr/local/share/projectM/textures"
-PRESET_DURATION=6
-MESH_X=1024
-MESH_Y=576
+PRESET_DURATION=4
+MESH_X=256
+MESH_Y=144
 VIDEO_WIDTH=1920
 VIDEO_HEIGHT=1080
 FRAMERATE=60
 BITRATE=8000
 SPEED_PRESET="medium"
+
+# Process ID for the gst-launch process
+GST_PID=""
+
+# Signal handler for proper termination
+cleanup() {
+    echo ""
+    echo "Caught signal, stopping conversion..."
+    if [ ! -z "$GST_PID" ]; then
+        kill -INT $GST_PID 2>/dev/null || true
+        sleep 1
+        # If it's still running, try harder
+        kill -TERM $GST_PID 2>/dev/null || true
+    fi
+
+    # Kill Xvfb if running
+    pkill Xvfb || true
+
+    exit 0
+}
+
+# Setup signal traps for proper termination
+trap cleanup INT TERM
 
 # Display help information
 show_help() {
@@ -140,6 +163,12 @@ gst-launch-1.0 -e \
             video/x-raw,framerate=$FRAMERATE/1,width=$VIDEO_WIDTH,height=$VIDEO_HEIGHT ! \
             x264enc bitrate=$(($BITRATE * 1000)) key-int-max=200 speed-preset=$SPEED_PRESET ! \
             video/x-h264,stream-format=avc,alignment=au ! queue ! mux. \
-    mp4mux name=mux ! filesink location=$OUTPUT_FILE
+    mp4mux name=mux ! filesink location=$OUTPUT_FILE &
+
+GST_PID=$!
+
+# Wait for the conversion to finish or for signals
+echo "Conversion running. Press Ctrl+C to stop."
+wait $GST_PID || true
 
 echo "Conversion complete! Output saved to $OUTPUT_FILE"

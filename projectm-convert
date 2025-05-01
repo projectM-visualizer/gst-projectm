@@ -15,8 +15,8 @@ show_help() {
     echo "  -o, --output FILE      Output video file path (required)"
     echo "  -p, --preset DIR       Path to projectM preset directory"
     echo "  -t, --texture DIR      Path to projectM texture directory"
-    echo "  -d, --duration SEC     Preset duration in seconds (default: 6)"
-    echo "  --mesh WxH             Mesh size (default: 1024x576)"
+    echo "  -d, --duration SEC     Preset duration in seconds (default: 4)"
+    echo "  --mesh WxH             Mesh size (default: 256x144)"
     echo "  --video-size WxH       Output video size (default: 1920x1080)"
     echo "  -r, --framerate FPS    Output video framerate (default: 60)"
     echo "  -b, --bitrate KBPS     Output video bitrate in kbps (default: 8000)"
@@ -155,7 +155,9 @@ fi
 echo "Starting conversion process..."
 DOCKER_CMD="docker run --rm $GPU_ARGS \
     -v \"$INPUT_FILE_ABS\":/input \
-    -v \"$OUTPUT_DIR\":/output"
+    -v \"$OUTPUT_DIR\":/output \
+    --init \
+    -it"
 
 # Add preset directory if specified
 if [ ! -z "$PRESET_PATH" ]; then
