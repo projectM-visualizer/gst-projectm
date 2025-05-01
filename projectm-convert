@@ -1,0 +1,176 @@
+#!/bin/bash
+set -e
+
+# Display help information
+show_help() {
+    echo "ProjectM Audio to Video Converter (Docker Wrapper)"
+    echo ""
+    echo "This script converts audio files to video files with ProjectM visualizations"
+    echo "using Docker with GPU acceleration."
+    echo ""
+    echo "Usage: $0 [options] -i input_file -o output_file"
+    echo ""
+    echo "Options:"
+    echo "  -i, --input FILE       Input audio file path (required)"
+    echo "  -o, --output FILE      Output video file path (required)"
+    echo "  -p, --preset DIR       Path to projectM preset directory"
+    echo "  -t, --texture DIR      Path to projectM texture directory"
+    echo "  -d, --duration SEC     Preset duration in seconds (default: 4)"
+    echo "  --mesh WxH             Mesh size (default: 256x144)"
+    echo "  --video-size WxH       Output video size (default: 1920x1080)"
+    echo "  -r, --framerate FPS    Output video framerate (default: 60)"
+    echo "  -b, --bitrate KBPS     Output video bitrate in kbps (default: 8000)"
+    echo "  --speed PRESET         x264 encoding speed preset (default: medium)"
+    echo "  --build                Build/rebuild the Docker image before running (after updating use this)"
+    echo "  -h, --help             Display this help message and exit"
+    echo ""
+    echo "Example:"
+    echo "  $0 -i ~/Music/song.mp3 -o ~/Videos/visualized.mp4 --video-size 3840x2160"
+    echo ""
+    exit 1
+}
+
+# Initialize variables
+IMAGE_NAME="gst-projectm-converter"
+BUILD_IMAGE=false
+DOCKER_ARGS=()
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in
+        -i|--input)
+            INPUT_FILE="$2"
+            INPUT_FILE_ABS=$(realpath "$INPUT_FILE")
+            # Use the filename inside the container since the file is mounted at /input
+            DOCKER_ARGS+=("-i" "/input")
+            shift 2
+            ;;
+        -o|--output)
+            OUTPUT_FILE="$2"
+            OUTPUT_FILE_ABS=$(realpath "$OUTPUT_FILE")
+            # Use the output filename inside the container
+            OUTPUT_FILENAME=$(basename "$OUTPUT_FILE")
+            DOCKER_ARGS+=("-o" "/output/$OUTPUT_FILENAME")
+            shift 2
+            ;;
+        -p|--preset)
+            PRESET_PATH="$2"
+            PRESET_PATH_ABS=$(realpath "$PRESET_PATH")
+            DOCKER_ARGS+=("-p" "/preset")
+            shift 2
+            ;;
+        -t|--texture)
+            TEXTURE_DIR="$2"
+            TEXTURE_DIR_ABS=$(realpath "$TEXTURE_DIR")
+            DOCKER_ARGS+=("-t" "/texture")
+            shift 2
+            ;;
+        -d|--duration)
+            DOCKER_ARGS+=("-d" "$2")
+            shift 2
+            ;;
+        --mesh)
+            DOCKER_ARGS+=("--mesh" "$2")
+            shift 2
+            ;;
+        --video-size)
+            DOCKER_ARGS+=("--video-size" "$2")
+            shift 2
+            ;;
+        -r|--framerate)
+            DOCKER_ARGS+=("-r" "$2")
+            shift 2
+            ;;
+        -b|--bitrate)
+            DOCKER_ARGS+=("-b" "$2")
+            shift 2
+            ;;
+        --speed)
+            DOCKER_ARGS+=("--speed" "$2")
+            shift 2
+            ;;
+        --build)
+            BUILD_IMAGE=true
+            shift
+            ;;
+        -h|--help)
+            show_help
+            ;;
+        *)
+            echo "Unknown option: $1"
+            show_help
+            ;;
+    esac
+done
+
+# Check for required arguments
+if [ -z "$INPUT_FILE" ] || [ -z "$OUTPUT_FILE" ]; then
+    echo "Error: Input and output files are required"
+    show_help
+fi
+
+# Check if input file exists
+if [ ! -f "$INPUT_FILE_ABS" ]; then
+    echo "Error: Input file does not exist: $INPUT_FILE"
+    exit 1
+fi
+
+# Create output directory if it doesn't exist
+OUTPUT_DIR=$(dirname "$OUTPUT_FILE_ABS")
+mkdir -p "$OUTPUT_DIR"
+
+# Build Docker image if requested
+if [ "$BUILD_IMAGE" = true ]; then
+    echo "Building Docker image..."
+    docker build -t $IMAGE_NAME .
+fi
+
+# Check if Docker image exists, if not build it
+if ! docker image inspect $IMAGE_NAME >/dev/null 2>&1; then
+    echo "Docker image not found. Building..."
+    docker build -t $IMAGE_NAME .
+fi
+
+# Determine GPU access options for Docker
+GPU_ARGS=""
+if command -v nvidia-smi >/dev/null 2>&1; then
+    # NVIDIA GPU
+    if docker --help | grep -q -- "--gpus"; then
+        GPU_ARGS="--gpus all"
+    else
+        # Fallback for older Docker versions
+        GPU_ARGS="--runtime=nvidia"
+    fi
+    echo "Using NVIDIA GPU acceleration"
+elif [ -d "/dev/dri" ]; then
+    # Intel/AMD GPU via DRI
+    GPU_ARGS="--device=/dev/dri:/dev/dri"
+    echo "Using DRI GPU acceleration"
+else
+    echo "Warning: No GPU detected. Falling back to software rendering."
+fi
+
+# Run the Docker container
+echo "Starting conversion process..."
+DOCKER_CMD="docker run --rm $GPU_ARGS \
+    -v \"$INPUT_FILE_ABS\":/input \
+    -v \"$OUTPUT_DIR\":/output \
+    --init \
+    -it"
+
+# Add preset directory if specified
+if [ ! -z "$PRESET_PATH" ]; then
+    DOCKER_CMD="$DOCKER_CMD -v \"$PRESET_PATH_ABS\":/preset"
+fi
+
+# Add texture directory if specified
+if [ ! -z "$TEXTURE_DIR" ]; then
+    DOCKER_CMD="$DOCKER_CMD -v \"$TEXTURE_DIR_ABS\":/texture"
+fi
+
+# Finalize and execute the Docker command
+DOCKER_CMD="$DOCKER_CMD $IMAGE_NAME ${DOCKER_ARGS[@]}"
+eval $DOCKER_CMD
+
+echo "Conversion complete! Output saved to $OUTPUT_FILE"
