@@ -1,3 +1,0 @@
-/home/cyber/dev/pm/gst-projectm/cmake-build-debug/CMakeFiles/gstprojectm.dir
-/home/cyber/dev/pm/gst-projectm/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/cyber/dev/pm/gst-projectm/cmake-build-debug/CMakeFiles/rebuild_cache.dir
