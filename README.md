@@ -84,6 +84,10 @@ gst-inspect projectm
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## [Demo Videos (4K)](https://www.youtube.com/watch?v=fI3BMiVDQgU&list=PLFLkbObX4o6TK1jGL6pm1wMwvq2FXnpYJ&index=7)
+
+https://www.youtube.com/watch?v=fI3BMiVDQgU&list=PLFLkbObX4o6TK1jGL6pm1wMwvq2FXnpYJ&index=7
+
 <!-- EASY AUDIO TO VIDEO CONVERSION -->
 
 ## Easy Audio to Video Conversion
