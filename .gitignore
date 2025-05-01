@@ -7,3 +7,4 @@ docs/TODO.md
 test/output
 cmake-build-*
 out/
+.cache/
