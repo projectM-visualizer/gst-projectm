@@ -119,7 +119,7 @@ jobs:
   package:
     name: Package Windows Release (${{ matrix.label }})
     runs-on: windows-latest
-#    if: startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/')
 
     strategy:
       matrix:
@@ -157,7 +157,7 @@ jobs:
       - name: Create Package
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".TrimStart("v")
+          $version = "${{ github.ref_name }}".TrimStart("v").Replace("/", "-")
           $variant = "${{ matrix.variant }}"
           $includeDeps = $${{ matrix.include_projectm }}
           $pkgDir = "gstprojectm-${version}-windows-x64-${variant}"
