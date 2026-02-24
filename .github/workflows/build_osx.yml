@@ -1,51 +1,65 @@
-name: macOS (x86_64)
+name: macOS (Universal)
 
 on:
   push:
-      branches: 
-        - "*"
-      tags:
-        - "*"
-    
+    branches:
+      - "*"
+    tags:
+      - "*"
+
   pull_request:
-      branches: 
-        - "*"
+    branches:
+      - "*"
+
+env:
+  # ── ProjectM source configuration ──────────────────────────────────
+  # Set to a tag (e.g. v4.1.4), branch name, or commit SHA.
+  PROJECTM_REF: master
 
 jobs:
   build-projectm:
-    name: Build ProjectM
-    runs-on: macos-latest
-    
+    name: Build ProjectM (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      matrix:
+        include:
+          - runner: macos-14
+            arch: arm64
+          - runner: macos-13
+            arch: x86_64
+
     steps:
       - name: Checkout ProjectM
         uses: actions/checkout@v4
         with:
           repository: 'projectM-visualizer/projectm'
+          ref: ${{ env.PROJECTM_REF }}
           submodules: 'recursive'
           fetch-depth: 0
 
       - name: Get ProjectM Git Hash
         id: git-hash
         run: echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
-        
+
       - name: Cache Install
         id: cache-install
         uses: actions/cache@v4
         with:
           path: |
             ${{ github.workspace }}/install
-          key: install-${{ runner.os }}-projectm-${{ steps.git-hash.outputs.hash }}
+          key: install-${{ runner.os }}-${{ matrix.arch }}-projectm-${{ steps.git-hash.outputs.hash }}
 
       - name: Install Packages
         run: |
           brew update
-          brew install ninja sdl2    
+          brew install ninja sdl2
         if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON -DENABLE_PLAYLIST=ON
         if: steps.cache-install.outputs.cache-hit != 'true'
-      
+
       - name: Build Release
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
         if: steps.cache-install.outputs.cache-hit != 'true'
@@ -58,12 +72,20 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-            name: projectm-osx-shared-latest
-            path: install/*
+          name: projectm-osx-${{ matrix.arch }}-shared-latest
+          path: install/*
 
   build-plugin:
-    name: Build GST Plugin ProjectM
-    runs-on: macos-latest
+    name: Build GST Plugin ProjectM (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      matrix:
+        include:
+          - runner: macos-14
+            arch: arm64
+          - runner: macos-13
+            arch: x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -74,19 +96,19 @@ jobs:
         uses: yogeshlonkar/wait-for-jobs@v0
         with:
           interval: '5000'
-          jobs: Build ProjectM
+          jobs: 'Build ProjectM (${{ matrix.arch }})'
           ttl: '15'
 
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: projectm-osx-shared-latest
+          name: projectm-osx-${{ matrix.arch }}-shared-latest
           path: artifacts
 
       - name: Install Packages
         run: |
           ./setup.sh --auto
-        
+
       - name: Configure Build
         run: cmake -G "Ninja" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_VERBOSE_MAKEFILE=YES -DprojectM4_DIR="artifacts/lib/cmake/projectM4"
         env:
@@ -104,5 +126,82 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-            name: gst-projectm-osx-latest
-            path: ${{ github.workspace }}/cmake-build/libgstprojectm.dylib
+          name: gst-projectm-osx-${{ matrix.arch }}-latest
+          path: ${{ github.workspace }}/cmake-build/libgstprojectm.dylib
+
+  package:
+    name: Package macOS (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    if: startsWith(github.ref, 'refs/tags/')
+
+    strategy:
+      matrix:
+        include:
+          - runner: macos-14
+            arch: arm64
+          - runner: macos-13
+            arch: x86_64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for Plugin Build
+        uses: yogeshlonkar/wait-for-jobs@v0
+        with:
+          interval: '5000'
+          jobs: 'Build GST Plugin ProjectM (${{ matrix.arch }})'
+          ttl: '15'
+
+      - name: Download Plugin Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gst-projectm-osx-${{ matrix.arch }}-latest
+          path: plugin
+
+      - name: Create Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCH="${{ matrix.arch }}"
+          PKG_NAME="gstprojectm-${VERSION}-macos-${ARCH}"
+          mkdir -p "${PKG_NAME}/lib/gstreamer-1.0"
+
+          # Copy the plugin only
+          cp plugin/libgstprojectm.dylib "${PKG_NAME}/lib/gstreamer-1.0/"
+
+          # Create README
+          cat > "${PKG_NAME}/README.txt" << 'EOF'
+          GStreamer projectM Plugin - macOS
+          =================================
+
+          Note: This package contains only the GStreamer plugin.
+          You must install projectM (libprojectM) separately.
+
+          Installation (Homebrew GStreamer):
+            1. Copy lib/gstreamer-1.0/libgstprojectm.dylib to:
+                 $(brew --prefix)/lib/gstreamer-1.0/
+
+          Installation (GStreamer.framework):
+            1. Copy lib/gstreamer-1.0/libgstprojectm.dylib to:
+                 /Library/Frameworks/GStreamer.framework/Versions/1.0/lib/gstreamer-1.0/
+
+          Alternative - User plugin directory:
+            1. mkdir -p ~/.local/share/gstreamer-1.0/plugins
+            2. Copy lib/gstreamer-1.0/libgstprojectm.dylib there
+            3. export GST_PLUGIN_PATH=~/.local/share/gstreamer-1.0/plugins
+
+          Verify installation:
+            gst-inspect-1.0 projectm
+
+          Usage:
+            gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! \
+              "video/x-raw(memory:GLMemory),width=512,height=512,framerate=60/1" ! \
+              glimagesink sync=false
+          EOF
+
+          tar czf "${PKG_NAME}.tar.gz" "${PKG_NAME}"
+
+      - name: Upload Release Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos-${{ matrix.arch }}
+          path: gstprojectm-*-macos-${{ matrix.arch }}.tar.gz

@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for all packaging jobs
+        uses: yogeshlonkar/wait-for-jobs@v0
+        with:
+          interval: '10000'
+          jobs: |
+            Package Windows Release (with deps)
+            Package Windows Release (without deps)
+            Package DEB (Ubuntu 24.04)
+            Package DEB Source
+            Package RPM (Fedora)
+            Package Source RPM
+            Package macOS (arm64)
+            Package macOS (x86_64)
+          ttl: '30'
+
+      - name: Download all release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release-artifacts
+          merge-multiple: false
+
+      - name: List release artifacts
+        run: find release-artifacts -type f | sort
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "gst-projectm ${{ github.ref_name }}"
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'rc') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
+          generate_release_notes: true
+          files: |
+            release-artifacts/**/*.zip
+            release-artifacts/**/*.deb
+            release-artifacts/**/*.dsc
+            release-artifacts/**/*.tar.*
+            release-artifacts/**/*.rpm
+            release-artifacts/**/*.src.rpm
+          body: |
+            ## Installation
+
+            ### Windows (x64)
+            Two packages are provided:
+            - **with-deps** — includes projectM DLLs, ready to use
+            - **without-deps** — plugin only, requires projectM installed separately
+
+            1. Download the `.zip` for your preferred variant
+            2. Extract and copy all DLLs to `%USERPROFILE%\.gstreamer\1.0\plugins\`
+            3. Set `GST_PLUGIN_PATH` environment variable:
+               ```powershell
+               [Environment]::SetEnvironmentVariable("GST_PLUGIN_PATH", "$Env:USERPROFILE\.gstreamer\1.0\plugins", "User")
+               ```
+
+            ### Ubuntu / Debian (x86_64)
+            Requires projectM (libprojectM) to be installed separately.
+            ```bash
+            sudo dpkg -i gstreamer1.0-projectm_*.deb
+            ```
+            A source package (`.dsc` + `.orig.tar.gz`) is also provided for rebuilding.
+
+            ### Fedora / RHEL (x86_64)
+            Requires projectM (libprojectM) to be installed separately.
+            ```bash
+            sudo rpm -i gstreamer1-projectm-*.rpm
+            ```
+            A source RPM (`.src.rpm`) is also provided for rebuilding.
+
+            ### macOS (arm64 / x86_64)
+            Requires projectM (libprojectM) to be installed separately.
+            1. Download the `.tar.gz` for your architecture
+            2. Copy `lib/gstreamer-1.0/libgstprojectm.dylib` to your GStreamer plugin directory
+
+            ### Verify
+            ```
+            gst-inspect-1.0 projectm
+            ```
+
+            See the README included in each package for detailed instructions.

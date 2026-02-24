@@ -2,14 +2,19 @@ name: Windows (x64)
 
 on:
   push:
-      branches: 
-        - "*"
-      tags:
-        - "*"
-    
+    branches:
+      - "*"
+    tags:
+      - "*"
+
   pull_request:
-      branches: 
-        - "*"
+    branches:
+      - "*"
+
+env:
+  # ── ProjectM source configuration ──────────────────────────────────
+  # Set to a tag (e.g. v4.1.4), branch name, or commit SHA.
+  PROJECTM_REF: master
 
 jobs:
   build-projectm:
@@ -18,11 +23,12 @@ jobs:
 
     env:
       VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
-    
+
     steps:
       - uses: actions/checkout@v4
         with:
           repository: 'projectM-visualizer/projectm'
+          ref: ${{ env.PROJECTM_REF }}
           submodules: 'recursive'
 
       - name: Export GitHub Actions cache environment variables
@@ -45,7 +51,7 @@ jobs:
           key: install-${{ runner.os }}-projectm-${{ steps.git-hash.outputs.hash }}
 
       - name: Configure Build
-        run: cmake -G "Visual Studio 17 2022" -A "X64" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON -DENABLE_PLAYLIST=ON
+        run: cmake -G "Visual Studio 17 2022" -A "X64" -S "${{ github.workspace }}" -B "${{ github.workspace }}/cmake-build" -DCMAKE_TOOLCHAIN_FILE="${Env:VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake" -DVCPKG_TARGET_TRIPLET=x64-windows -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" -DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" -DCMAKE_VERBOSE_MAKEFILE=YES -DBUILD_SHARED_LIBS=ON -DENABLE_PLAYLIST=ON -DENABLE_GLES=OFF
         if: steps.cache-install.outputs.cache-hit != 'true'
 
       - name: Build Release
@@ -56,12 +62,12 @@ jobs:
         run: |
           cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --target install
         if: steps.cache-install.outputs.cache-hit != 'true'
-          
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-            name: projectm-windows-shared-latest
-            path: install/*
+          name: projectm-windows-shared-latest
+          path: install/*
 
   build-plugin:
     name: Build GST Plugin ProjectM
@@ -104,20 +110,122 @@ jobs:
         id: build
         run: cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --parallel
 
-      # - name: Install Chocolatey
-      #   uses: crazy-max/ghaction-chocolatey@v3
-      #   with:
-      #     args: install gstreamer --no-progress
-      #   if: steps.build.outputs.return-code == 0
-
-      # - name: Test
-      #   run: |
-      #     set GST_PLUGIN_PATH="${{ github.workspace }}/cmake-build/Release"
-      #     gst-inspect-1.0 projectm
-      #   if: steps.build.outputs.return-code == 0
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-            name: gst-projectm-windows-latest
-            path: ${{ github.workspace }}\cmake-build\Release\*.dll
+          name: gst-projectm-windows-latest
+          path: ${{ github.workspace }}\cmake-build\Release\*.dll
+
+  package:
+    name: Package Windows Release (${{ matrix.label }})
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    strategy:
+      matrix:
+        include:
+          - variant: with-deps
+            label: with deps
+            include_projectm: true
+          - variant: without-deps
+            label: without deps
+            include_projectm: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for Plugin Build
+        uses: yogeshlonkar/wait-for-jobs@v0
+        with:
+          interval: '5000'
+          jobs: Build GST Plugin ProjectM
+          ttl: '15'
+
+      - name: Download Plugin Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gst-projectm-windows-latest
+          path: plugin
+
+      - name: Download ProjectM Artifact
+        if: matrix.include_projectm
+        uses: actions/download-artifact@v4
+        with:
+          name: projectm-windows-shared-latest
+          path: projectm
+
+      - name: Create Package
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          $variant = "${{ matrix.variant }}"
+          $includeDeps = $${{ matrix.include_projectm }}
+          $pkgDir = "gstprojectm-${version}-windows-x64-${variant}"
+          New-Item -Path $pkgDir -ItemType Directory | Out-Null
+
+          # Copy the gstprojectm plugin DLL
+          Copy-Item "plugin\gstprojectm.dll" -Destination $pkgDir
+
+          # Copy projectM DLLs if this is the with-deps variant
+          if ($includeDeps) {
+            Get-ChildItem -Path "projectm\bin" -Filter "projectM-4*.dll" | ForEach-Object {
+              Copy-Item $_.FullName -Destination $pkgDir
+            }
+          }
+
+          # Build README content
+          if ($includeDeps) {
+            $variantDesc = "with dependencies (includes projectM DLLs)"
+            $depsNote = @"
+
+          Contents:
+          - gstprojectm.dll          - GStreamer plugin
+          - projectM-4.dll           - projectM rendering library
+          - projectM-4-playlist.dll  - projectM playlist library (if present)
+          "@
+          } else {
+            $variantDesc = "without dependencies (plugin only)"
+            $depsNote = @"
+
+          Contents:
+          - gstprojectm.dll          - GStreamer plugin
+
+          Note: You must install projectM separately.
+          The projectM DLLs (projectM-4.dll, projectM-4-playlist.dll) must be
+          available on your PATH or in the same directory as the plugin.
+          "@
+          }
+
+          @"
+          GStreamer projectM Plugin - Windows x64 (${variantDesc})
+          ========================================================
+          Version: ${version}
+          ${depsNote}
+
+          Installation:
+          1. Install GStreamer from https://gstreamer.freedesktop.org/download/
+          2. Copy all DLL files from this package to one of:
+             - %USERPROFILE%\.gstreamer\1.0\plugins\
+             - Your GStreamer installation's lib\gstreamer-1.0\ directory
+          3. If using the user directory, set the GST_PLUGIN_PATH environment variable:
+
+             [Environment]::SetEnvironmentVariable("GST_PLUGIN_PATH", "%USERPROFILE%\.gstreamer\1.0\plugins", "User")
+
+          Verify installation:
+            gst-inspect-1.0 projectm
+
+          Usage:
+            gst-launch-1.0 audiotestsrc ! queue ! audioconvert ! projectm ! "video/x-raw(memory:GLMemory),width=512,height=512,framerate=60/1" ! glimagesink sync=false
+          "@ | Out-File -FilePath "$pkgDir\README.txt" -Encoding UTF8
+
+          # List contents
+          Write-Host "Package contents:"
+          Get-ChildItem $pkgDir | ForEach-Object { Write-Host "  $($_.Name) ($([math]::Round($_.Length / 1KB)) KB)" }
+
+          Compress-Archive -Path $pkgDir -DestinationPath "$pkgDir.zip"
+
+      - name: Upload Release Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-x64-${{ matrix.variant }}
+          path: gstprojectm-*-windows-x64-${{ matrix.variant }}.zip

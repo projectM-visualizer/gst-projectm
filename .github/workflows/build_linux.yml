@@ -2,25 +2,31 @@ name: Ubuntu Linux (x86_64)
 
 on:
   push:
-      branches: 
-        - "*"
-      tags:
-        - "*"
-    
+    branches:
+      - "*"
+    tags:
+      - "*"
+
   pull_request:
-      branches: 
-        - "*"
+    branches:
+      - "*"
+
+env:
+  # ── ProjectM source configuration ──────────────────────────────────
+  # Set to a tag (e.g. v4.1.4), branch name, or commit SHA.
+  PROJECTM_REF: master
 
 jobs:
   build-projectm:
     name: Build ProjectM
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout ProjectM
         uses: actions/checkout@v4
         with:
           repository: 'projectM-visualizer/projectm'
+          ref: ${{ env.PROJECTM_REF }}
           submodules: 'recursive'
 
       - name: Get ProjectM Git Hash
@@ -53,12 +59,12 @@ jobs:
         run: |
           cmake --build "${{ github.workspace }}/cmake-build" --config "Release" --target install
         if: steps.cache-install.outputs.cache-hit != 'true'
-          
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-            name: projectm-linux-shared-latest
-            path: install/*
+          name: projectm-linux-shared-latest
+          path: install/*
 
   build-plugin:
     name: Build GST Plugin ProjectM
@@ -103,5 +109,332 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-            name: gst-projectm-linux-latest
-            path: ${{ github.workspace }}/cmake-build/libgstprojectm.so
+          name: gst-projectm-linux-latest
+          path: ${{ github.workspace }}/cmake-build/libgstprojectm.so
+
+  package-deb:
+    name: Package DEB (Ubuntu 24.04)
+    runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for Plugin Build
+        uses: yogeshlonkar/wait-for-jobs@v0
+        with:
+          interval: '5000'
+          jobs: Build GST Plugin ProjectM
+          ttl: '15'
+
+      - name: Download Plugin Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gst-projectm-linux-latest
+          path: plugin
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev debhelper devscripts fakeroot
+
+      - name: Create DEB Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          ARCH=$(dpkg --print-architecture)
+          MULTIARCH=$(dpkg-architecture -qDEB_HOST_MULTIARCH)
+          PKG_NAME="gstreamer1.0-projectm"
+          PKG_DIR="${PKG_NAME}_${VERSION}_${ARCH}"
+
+          mkdir -p "${PKG_DIR}/DEBIAN"
+          mkdir -p "${PKG_DIR}/usr/lib/${MULTIARCH}/gstreamer-1.0"
+
+          # Copy the plugin only
+          cp plugin/libgstprojectm.so "${PKG_DIR}/usr/lib/${MULTIARCH}/gstreamer-1.0/"
+
+          # Control file
+          cat > "${PKG_DIR}/DEBIAN/control" << EOF
+          Package: ${PKG_NAME}
+          Version: ${VERSION}
+          Section: libs
+          Priority: optional
+          Architecture: ${ARCH}
+          Depends: gstreamer1.0-plugins-base (>= 1.20), libgstreamer-gl1.0-0 (>= 1.20), libgl1, libprojectm-dev (>= 4.1.0)
+          Recommends: gstreamer1.0-plugins-good
+          Maintainer: projectM Visualizer <projectm.visualizer@gmail.com>
+          Homepage: https://github.com/projectM-visualizer/gst-projectm
+          Description: GStreamer plugin for projectM audio visualization
+           This package provides a GStreamer plugin that uses the projectM library
+           to render audio visualizations. It can be used with any GStreamer pipeline
+           to add real-time music visualizations.
+           .
+           Requires projectM (libprojectM) to be installed separately.
+          EOF
+          sed -i 's/^          //' "${PKG_DIR}/DEBIAN/control"
+
+          # Set permissions
+          find "${PKG_DIR}/usr" -type d -exec chmod 755 {} \;
+          find "${PKG_DIR}/usr" -type f -name "*.so*" -exec chmod 644 {} \;
+
+          dpkg-deb --build "${PKG_DIR}"
+
+      - name: Upload DEB Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-deb-ubuntu2404
+          path: "*.deb"
+
+  package-deb-src:
+    name: Package DEB Source
+    runs-on: ubuntu-24.04
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev debhelper devscripts fakeroot
+
+      - name: Create DEB Source Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PKG_NAME="gstreamer1.0-projectm"
+          SRC_DIR="${PKG_NAME}-${VERSION}"
+
+          mkdir -p "${SRC_DIR}"
+          rsync -a --exclude=build --exclude=dist --exclude=.git \
+            --exclude="*.deb" --exclude="${PKG_NAME}_*" --exclude="${PKG_NAME}-*" \
+            . "${SRC_DIR}/"
+
+          mkdir -p "${SRC_DIR}/debian/source"
+
+          cat > "${SRC_DIR}/debian/changelog" << EOF
+          ${PKG_NAME} (${VERSION}) noble; urgency=medium
+
+            * Release ${VERSION}
+
+           -- projectM Visualizer <projectm.visualizer@gmail.com>  $(date -R)
+          EOF
+
+          cat > "${SRC_DIR}/debian/control" << EOF
+          Source: ${PKG_NAME}
+          Section: libs
+          Priority: optional
+          Maintainer: projectM Visualizer <projectm.visualizer@gmail.com>
+          Build-Depends: debhelper-compat (= 13), cmake (>= 3.21), ninja-build, pkg-config, libgl1-mesa-dev, mesa-common-dev, libgstreamer1.0-dev (>= 1.20), libgstreamer-plugins-base1.0-dev (>= 1.20), libprojectm-dev (>= 4.1.0)
+          Standards-Version: 4.6.2
+          Homepage: https://github.com/projectM-visualizer/gst-projectm
+
+          Package: ${PKG_NAME}
+          Architecture: any
+          Depends: \${shlibs:Depends}, \${misc:Depends}, gstreamer1.0-plugins-base (>= 1.20), libgstreamer-gl1.0-0 (>= 1.20), libprojectm-dev (>= 4.1.0)
+          Description: GStreamer plugin for projectM audio visualization
+           This package provides a GStreamer plugin that uses the projectM library
+           to render audio visualizations. It can be used with any GStreamer pipeline
+           to add real-time music visualizations.
+          EOF
+
+          cat > "${SRC_DIR}/debian/rules" << 'RULESEOF'
+          #!/usr/bin/make -f
+          %:
+          	dh $@
+
+          override_dh_auto_configure:
+          	dh_auto_configure -- -G Ninja -DCMAKE_BUILD_TYPE=Release
+          RULESEOF
+          chmod +x "${SRC_DIR}/debian/rules"
+
+          echo "13" > "${SRC_DIR}/debian/compat"
+
+          cat > "${SRC_DIR}/debian/copyright" << EOF
+          Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+          Upstream-Name: gst-projectm
+          Upstream-Contact: https://github.com/projectM-visualizer/gst-projectm
+          Source: https://github.com/projectM-visualizer/gst-projectm
+
+          Files: *
+          Copyright: projectM Visualizer contributors
+          License: LGPL-2.1+
+          EOF
+
+          echo "3.0 (native)" > "${SRC_DIR}/debian/source/format"
+
+          # Create orig tarball and source package
+          tar czf "${PKG_NAME}_${VERSION}.orig.tar.gz" "${SRC_DIR}"
+          cd "${SRC_DIR}"
+          dpkg-source -b .
+          cd ..
+
+      - name: Upload DEB Source Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-deb-source
+          path: |
+            gstreamer1.0-projectm_*.dsc
+            gstreamer1.0-projectm_*.orig.tar.gz
+            gstreamer1.0-projectm_*.debian.tar.*
+
+  package-rpm:
+    name: Package RPM (Fedora)
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:40
+
+    steps:
+      - name: Install base tools
+        run: |
+          dnf install -y git
+
+      - uses: actions/checkout@v4
+
+      - name: Wait for Plugin Build
+        uses: yogeshlonkar/wait-for-jobs@v0
+        with:
+          interval: '5000'
+          jobs: Build GST Plugin ProjectM
+          ttl: '15'
+
+      - name: Download Plugin Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gst-projectm-linux-latest
+          path: plugin
+
+      - name: Install RPM build tools
+        run: |
+          dnf install -y rpm-build
+
+      - name: Create Binary RPM
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          LIBDIR=$(rpm --eval '%{_libdir}')
+
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+          cat > ~/rpmbuild/SPECS/gst-projectm.spec << SPECEOF
+          Name:           gstreamer1-projectm
+          Version:        ${VERSION}
+          Release:        1%{?dist}
+          Summary:        GStreamer plugin for projectM audio visualization
+          License:        LGPLv2+
+          URL:            https://github.com/projectM-visualizer/gst-projectm
+
+          AutoReqProv:    no
+          Requires:       gstreamer1 >= 1.20
+          Requires:       gstreamer1-plugins-base >= 1.20
+
+          %description
+          This package provides a GStreamer plugin that uses the projectM library
+          to render audio visualizations. It can be used with any GStreamer pipeline
+          to add real-time music visualizations.
+
+          Requires projectM (libprojectM) to be installed separately.
+
+          %install
+          mkdir -p %{buildroot}${LIBDIR}/gstreamer-1.0
+          install -m 0755 ${GITHUB_WORKSPACE}/plugin/libgstprojectm.so %{buildroot}${LIBDIR}/gstreamer-1.0/
+
+          %files
+          %license LICENSE
+          ${LIBDIR}/gstreamer-1.0/libgstprojectm.so
+
+          %changelog
+          * $(date '+%a %b %d %Y') projectM Visualizer <projectm.visualizer@gmail.com> - ${VERSION}-1
+          - Release ${VERSION}
+          SPECEOF
+
+          rpmbuild -bb ~/rpmbuild/SPECS/gst-projectm.spec
+
+          find ~/rpmbuild/RPMS -name "*.rpm" -exec cp {} ${GITHUB_WORKSPACE}/ \;
+
+      - name: Upload RPM Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-rpm-fedora40
+          path: "*.rpm"
+
+  package-srpm:
+    name: Package Source RPM
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:40
+
+    steps:
+      - name: Install base tools
+        run: |
+          dnf install -y git rpm-build
+
+      - uses: actions/checkout@v4
+
+      - name: Create Source RPM
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+          # Create source tarball
+          tar czf ~/rpmbuild/SOURCES/gst-projectm-${VERSION}.tar.gz \
+            --transform "s,^,gst-projectm-${VERSION}/," \
+            --exclude=build --exclude=dist --exclude=.git \
+            --exclude=plugin --exclude="*.rpm" \
+            .
+
+          cat > ~/rpmbuild/SPECS/gst-projectm.spec << SPECEOF
+          Name:           gstreamer1-projectm
+          Version:        ${VERSION}
+          Release:        1%{?dist}
+          Summary:        GStreamer plugin for projectM audio visualization
+          License:        LGPLv2+
+          URL:            https://github.com/projectM-visualizer/gst-projectm
+          Source0:        gst-projectm-%{version}.tar.gz
+
+          BuildRequires:  cmake >= 3.21
+          BuildRequires:  ninja-build
+          BuildRequires:  gcc
+          BuildRequires:  gcc-c++
+          BuildRequires:  pkgconfig
+          BuildRequires:  mesa-libGL-devel
+          BuildRequires:  mesa-libEGL-devel
+          BuildRequires:  gstreamer1-devel >= 1.20
+          BuildRequires:  gstreamer1-plugins-base-devel >= 1.20
+          BuildRequires:  glib2-devel
+          Requires:       gstreamer1 >= 1.20
+          Requires:       gstreamer1-plugins-base >= 1.20
+
+          %description
+          This package provides a GStreamer plugin that uses the projectM library
+          to render audio visualizations. 
+
+          %prep
+          %setup -q -n gst-projectm-%{version}
+
+          %build
+          %cmake -G Ninja
+          %cmake_build
+
+          %install
+          mkdir -p %{buildroot}%{_libdir}/gstreamer-1.0
+          install -m 0755 %{_vpath_builddir}/libgstprojectm.so %{buildroot}%{_libdir}/gstreamer-1.0/
+
+          %files
+          %license LICENSE
+          %{_libdir}/gstreamer-1.0/libgstprojectm.so
+
+          %changelog
+          * $(date '+%a %b %d %Y') projectM Visualizer <projectm.visualizer@gmail.com> - ${VERSION}-1
+          - Release ${VERSION}
+          SPECEOF
+
+          rpmbuild -bs ~/rpmbuild/SPECS/gst-projectm.spec
+
+          find ~/rpmbuild/SRPMS -name "*.src.rpm" -exec cp {} ${GITHUB_WORKSPACE}/ \;
+
+      - name: Upload Source RPM
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-srpm
+          path: "*.src.rpm"
