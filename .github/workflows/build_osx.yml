@@ -1,4 +1,4 @@
-name: macOS (Universal)
+name: macOS (arm64)
 
 on:
   push:
@@ -18,16 +18,8 @@ env:
 
 jobs:
   build-projectm:
-    name: Build ProjectM (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
-
-    strategy:
-      matrix:
-        include:
-          - runner: macos-14
-            arch: arm64
-          - runner: macos-13
-            arch: x86_64
+    name: Build ProjectM
+    runs-on: macos-14
 
     steps:
       - name: Checkout ProjectM
@@ -48,7 +40,7 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/install
-          key: install-${{ runner.os }}-${{ matrix.arch }}-projectm-${{ steps.git-hash.outputs.hash }}
+          key: install-${{ runner.os }}-arm64-projectm-${{ steps.git-hash.outputs.hash }}
 
       - name: Install Packages
         run: |
@@ -72,20 +64,12 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: projectm-osx-${{ matrix.arch }}-shared-latest
+          name: projectm-osx-arm64-shared-latest
           path: install/*
 
   build-plugin:
-    name: Build GST Plugin ProjectM (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
-
-    strategy:
-      matrix:
-        include:
-          - runner: macos-14
-            arch: arm64
-          - runner: macos-13
-            arch: x86_64
+    name: Build GST Plugin ProjectM
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@v4
@@ -96,13 +80,13 @@ jobs:
         uses: yogeshlonkar/wait-for-jobs@v0
         with:
           interval: '5000'
-          jobs: 'Build ProjectM (${{ matrix.arch }})'
+          jobs: Build ProjectM
           ttl: '15'
 
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
-          name: projectm-osx-${{ matrix.arch }}-shared-latest
+          name: projectm-osx-arm64-shared-latest
           path: artifacts
 
       - name: Install Packages
@@ -126,21 +110,13 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: gst-projectm-osx-${{ matrix.arch }}-latest
+          name: gst-projectm-osx-arm64-latest
           path: ${{ github.workspace }}/cmake-build/libgstprojectm.dylib
 
   package:
-    name: Package macOS (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
+    name: Package macOS (arm64)
+    runs-on: macos-14
     if: startsWith(github.ref, 'refs/tags/')
-
-    strategy:
-      matrix:
-        include:
-          - runner: macos-14
-            arch: arm64
-          - runner: macos-13
-            arch: x86_64
 
     steps:
       - uses: actions/checkout@v4
@@ -149,20 +125,19 @@ jobs:
         uses: yogeshlonkar/wait-for-jobs@v0
         with:
           interval: '5000'
-          jobs: 'Build GST Plugin ProjectM (${{ matrix.arch }})'
+          jobs: Build GST Plugin ProjectM
           ttl: '15'
 
       - name: Download Plugin Artifact
         uses: actions/download-artifact@v4
         with:
-          name: gst-projectm-osx-${{ matrix.arch }}-latest
+          name: gst-projectm-osx-arm64-latest
           path: plugin
 
       - name: Create Package
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          ARCH="${{ matrix.arch }}"
-          PKG_NAME="gstprojectm-${VERSION}-macos-${ARCH}"
+          PKG_NAME="gstprojectm-${VERSION}-macos-arm64"
           mkdir -p "${PKG_NAME}/lib/gstreamer-1.0"
 
           # Copy the plugin only
@@ -203,5 +178,5 @@ jobs:
       - name: Upload Release Package
         uses: actions/upload-artifact@v4
         with:
-          name: release-macos-${{ matrix.arch }}
-          path: gstprojectm-*-macos-${{ matrix.arch }}.tar.gz
+          name: release-macos-arm64
+          path: gstprojectm-*-macos-arm64.tar.gz

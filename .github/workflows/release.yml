@@ -28,7 +28,6 @@ jobs:
             Package RPM (Fedora)
             Package Source RPM
             Package macOS (arm64)
-            Package macOS (x86_64)
           ttl: '30'
 
       - name: Download all release artifacts
@@ -84,9 +83,9 @@ jobs:
             ```
             A source RPM (`.src.rpm`) is also provided for rebuilding.
 
-            ### macOS (arm64 / x86_64)
+            ### macOS (arm64)
             Requires projectM (libprojectM) to be installed separately.
-            1. Download the `.tar.gz` for your architecture
+            1. Download the `.tar.gz`
             2. Copy `lib/gstreamer-1.0/libgstprojectm.dylib` to your GStreamer plugin directory
 
             ### Verify
