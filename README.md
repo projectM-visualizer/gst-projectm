@@ -58,7 +58,7 @@ There are several ways to get the plugin, depending on what you need:
 | **Docker container** | One-command audio-to-video conversion. No setup required. | Quick audio-to-video rendering | [Docker conversion](#easy-audio-to-video-conversion) |
 | **Flatpak / AppImage** | Self-contained bundles that ship their own GStreamer and run `gst-launch-1.0` directly. No system GStreamer needed. | Quick testing without installing anything | **[Linux — Portable Bundles](docs/LINUX.md#portable-bundles-flatpak--appimage)** |
 
-Packages that install the plugin (DEB, RPM, ZIP, tar.gz) place a single shared library (`libgstprojectm.so` / `.dylib` / `.dll`) into your GStreamer plugin path. After that, the `projectm` element is available in every pipeline on the system. The Flatpak and AppImage bundles are different — they are self-contained executables that include their own copy of GStreamer and are intended for quick testing, not as a way to add the plugin to your system.
+Packages that install the plugin (DEB, RPM, ZIP, tar.gz) place a single shared library (`libgstprojectm.so` / `.dll`) into your GStreamer plugin path. After that, the `projectm` element is available in every pipeline on the system. The Flatpak and AppImage bundles are different — they are self-contained executables that include their own copy of GStreamer and are intended for quick testing, not as a way to add the plugin to your system.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

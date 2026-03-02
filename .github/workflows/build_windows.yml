@@ -3,13 +3,9 @@ name: Windows (x64)
 on:
   push:
     branches:
-      - "*"
+      - master
     tags:
-      - "*"
-
-  pull_request:
-    branches:
-      - "*"
+      - "v*"
 
 env:
   PROJECTM_REF: master
