@@ -3,9 +3,13 @@ name: Windows (x64)
 on:
   push:
     branches:
-      - master
+      - "*"
     tags:
       - "v*"
+
+  pull_request:
+    branches:
+      - "*"
 
 env:
   PROJECTM_REF: master
@@ -45,6 +49,15 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+      - name: Restore vcpkg cache (PR only)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: C:/vcpkg/installed
+          key: vcpkg-${{ runner.os }}-x64-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-x64-windows-
+
       - name: Get Hash
         id: git-hash
         run: echo "hash=$(git rev-parse HEAD)-${{ matrix.variant }}v4" >> $Env:GITHUB_OUTPUT
@@ -77,6 +90,13 @@ jobs:
           name: projectm-windows-${{ matrix.variant }}-latest
           path: install/*
 
+      - name: Save vcpkg cache (push only)
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: C:/vcpkg/installed
+          key: vcpkg-${{ runner.os }}-x64-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+
   build-plugin:
     name: Build GST Plugin (${{ matrix.variant }})
     needs: [build-projectm]
@@ -96,6 +116,22 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'recursive'
+
+      - name: Export GitHub Actions cache environment variables
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Restore vcpkg cache (PR only)
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v4
+        with:
+          path: C:/vcpkg/installed
+          key: vcpkg-${{ runner.os }}-x64-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-x64-windows-
 
       - uses: actions/download-artifact@v4
         with:
@@ -150,6 +186,13 @@ jobs:
         with:
           name: gst-projectm-windows-${{ matrix.variant }}-latest
           path: ${{ github.workspace }}\cmake-build\Release\*.dll
+
+      - name: Save vcpkg cache (push only)
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v4
+        with:
+          path: C:/vcpkg/installed
+          key: vcpkg-${{ runner.os }}-x64-windows-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
 
   package:
     name: Package Windows (${{ matrix.label }})
